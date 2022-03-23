@@ -45,6 +45,8 @@ export interface IPieceState {
 export default class Piece extends React.Component<IPieceProps, IPieceState> {
   public static readonly DEFAULT_SIZE = 64
   public static readonly DEFAULT_CLIPSIZE = 100;
+  public static readonly BOARD_ROW = 10;
+  public static readonly BOARD_COL = 9;
 
   private static _useImage = false;
   private static _instances: Piece[] = [];
@@ -88,8 +90,8 @@ export default class Piece extends React.Component<IPieceProps, IPieceState> {
 
   public render() {
     let style : React.CSSProperties = {
-      left: this.state.x,
-      top: this.state.y,
+      left: `${this.state.x * 100 / (Piece.BOARD_COL- 1)}%`,
+      top: `${this.state.y * 100 / (Piece.BOARD_ROW - 1)}%`,
       transform: 'translate(-50%, -50%)',
       position: 'absolute'
     }
