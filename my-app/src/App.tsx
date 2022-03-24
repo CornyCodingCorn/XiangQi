@@ -4,9 +4,10 @@ import ImagesCollection from './resources/ImagesCollection';
 import * as React from 'react';
 import Board from './gameplay/Board';
 
-const BOARD_COLOR = 0xe5bc70;
-const PAD_COLOR = 0x93511f;
-const LINE_COLOR = 0xe5bc70;
+const BOARD_COLOR = 0xefcc8b;
+const PAD_COLOR = 0x724726;
+const LINE_COLOR = 0x724726;
+const LINE_THICKNESS = 4;
 
 export interface IAppProps {
 
@@ -30,7 +31,16 @@ export default class App extends React.Component<IAppProps> {
     if (this._isLoaded) {
       component = (
         <div>
-          <Board isFlipped={false} lineThickness={4} boardColor={BOARD_COLOR} padColor={PAD_COLOR} horizontalPadding={50} verticalPadding={50} cellWidth={70} cellHeight={70}/>
+          <Board  isFlipped={false} 
+                  lineThickness={LINE_THICKNESS} 
+                  lineOpacity={0.6}
+                  boardColor={BOARD_COLOR} 
+                  padColor={PAD_COLOR} lineColor={LINE_COLOR} 
+                  horizontalPadding={35} 
+                  verticalPadding={35} 
+                  pieceSize={56} 
+                  cellWidth={70} 
+                  cellHeight={70}/>
         </div>
       );
     }

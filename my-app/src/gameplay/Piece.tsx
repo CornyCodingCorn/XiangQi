@@ -1,6 +1,8 @@
 import * as React from 'react';
 import ImagesCollection from '../resources/ImagesCollection';
 import * as Sprites from '../resources/pieces/Index'
+import EventHandler from '../utils/EventHandler';
+import Draggable from 'react-draggable';
 
 export enum PieceType {
   King = 'k',
@@ -16,11 +18,14 @@ export interface IPieceProps {
   x?: number;
   y?: number;
 
-  width?: number;
-  height?: number;
+  size?: number;
+  shadowPad?: number;
 
   clipWidth?: number;
   clipHeight?: number;
+
+  onMouseDown?: (arg0: Piece) => void;
+  onMouseUp?: (arg0: Piece) => void;
 
   isRed?: boolean;
 
@@ -31,8 +36,8 @@ export interface IPieceState {
   x: number;
   y: number;
 
-  width: number;
-  height: number;
+  size: number;
+  shadowPad: number;
 
   clipWidth: number;
   clipHeight: number;
@@ -44,7 +49,9 @@ export interface IPieceState {
 
 export default class Piece extends React.Component<IPieceProps, IPieceState> {
   public static readonly DEFAULT_SIZE = 64
-  public static readonly DEFAULT_CLIPSIZE = 100;
+  public static readonly DEFAULT_SHADOW_PAD = 0.5;
+  public static readonly DEFAULT_CLIP_HEIGHT = 150;
+  public static readonly DEFAULT_CLIP_WIDTH = 100;
   public static readonly BOARD_ROW = 10;
   public static readonly BOARD_COL = 9;
 
@@ -67,11 +74,11 @@ export default class Piece extends React.Component<IPieceProps, IPieceState> {
     this.state = {
       x: props.x                    || 0,
       y: props.y                    || 0,
-      width: props.width            || Piece.DEFAULT_SIZE,
-      height: props.height          || Piece.DEFAULT_SIZE,
+      size: props.size              || Piece.DEFAULT_SIZE,
+      shadowPad: props.shadowPad    || Piece.DEFAULT_SHADOW_PAD,
       isRed: props.isRed            || false,
-      clipWidth: props.clipWidth    || Piece.DEFAULT_CLIPSIZE,
-      clipHeight: props.clipHeight  || Piece.DEFAULT_CLIPSIZE,
+      clipWidth: props.clipWidth    || Piece.DEFAULT_CLIP_WIDTH,
+      clipHeight: props.clipHeight  || Piece.DEFAULT_CLIP_HEIGHT,
       type: props.type              || PieceType.King
     }
   }
@@ -98,20 +105,26 @@ export default class Piece extends React.Component<IPieceProps, IPieceState> {
 
     return (
       <canvas
-        style={style}
-        onMouseUp={() => this._handleMouseUp()}
-        onMouseDown={() => this._handleMouseDown()}
-        ref={c => this._initCanvas(c)} 
-        width={this.state.width} 
-        height={this.state.height}/>
+      style={style}
+      onMouseUp={() => this._handleMouseUp()}
+      onMouseDown={() => this._handleMouseDown()}
+      ref={c => this._initCanvas(c)} 
+      width={this.state.size} 
+      height={this.state.size * (1 + this.state.shadowPad)}/>
     );
   }
+
   private _handleMouseUp(): void {
-    console.log("Mouse up");
+    if (this.props.onMouseUp === undefined)
+      return;
+
+    this.props.onMouseUp(this);
   }
   private _handleMouseDown(): void {
-    console.log("Mouse down");
-    Piece.useImage = !Piece.useImage;
+    if (this.props.onMouseDown === undefined)
+      return;
+
+    this.props.onMouseDown(this);
   }
 
   private _initCanvas(canvas: HTMLCanvasElement | null) {
@@ -159,7 +172,7 @@ export default class Piece extends React.Component<IPieceProps, IPieceState> {
        + (Piece._useImage ? this.state.clipWidth : 0);
       context.drawImage(img, 
         offsetX, 0, this.state.clipWidth, this.state.clipHeight,
-        0, 0, this.state.width, this.state.height
+        0, 0, this.state.size, this.state.size * (1 + this.state.shadowPad)
       )
     }
   }
