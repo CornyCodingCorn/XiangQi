@@ -1,166 +1,158 @@
-import * as React from 'react';
-import Color from '../utils/Color';
-import UtilsColor from '../utils/Color';
-import { getEnumFromStr } from '../utils/enum';
-import { BgCanvas, IBgCanvasProps, IBgCanvasStates } from './BgCanvas';
-import { BoardBase, BoardConst } from './common/BoardBase';
-import Piece, { PieceType } from './Piece';
+import * as React from "react";
+import { BgCanvas, IBgCanvasProps, IBgCanvasStates } from "./BgCanvas";
+import { BoardBase, BoardConst } from "./common/BoardBase";
+import { IOverlayProps, IOverlayStates } from "./Overlay";
+import Piece, { PieceType } from "./Piece";
 
-export interface IBoardProps extends IBgCanvasProps {
-  boardFEN?: string;
+export interface IBoardProps extends IBgCanvasProps, IOverlayProps {
+	boardFEN?: string;
 
-  pieceSize?: number;
+	pieceSize?: number;
 
-  isFlipped?: boolean;
+	isFlipped?: boolean;
 }
 
-export interface IBoardState extends IBgCanvasStates {
-  board: string;
+export interface IBoardState extends IBgCanvasStates, IOverlayStates {
+	board: string;
 
-  pieceSize: number;
+	pieceSize: number;
 
-  isFlipped: boolean;
+	isFlipped: boolean;
 }
 
 export default class Board extends BoardBase<IBoardProps, IBoardState> {
-  private static readonly BOARD_NEW_FEN = "";
+	private static readonly BOARD_NEW_FEN = "";
 
-  private _pieceCollection: Piece[] = [];
-  private _bg: BgCanvas | null = null;
+	private _pieceCollection: Piece[] = [];
+	private _bg: BgCanvas | null = null;
 
-  constructor(props: IBoardProps) {
-    super(props);
+	constructor(props: IBoardProps) {
+		super(props);
 
-    this.state = {
-      ...this.state,
-      board: "",
-      isFlipped: this.props.isFlipped || false,
-      pieceSize: this.props.pieceSize || Piece.DEFAULT_SIZE
-    }
-  }
+		this.state = {
+			...this.state,
+			board: "",
+			isFlipped: this.props.isFlipped || false,
+			pieceSize: this.props.pieceSize || Piece.DEFAULT_SIZE,
+		};
+	}
 
-  public componentWillUnmount() {
-    
-  }
-  public componentDidMount() {
-    this._createBoard("");
-  }
-  
-  public render() {
-    let pieces:JSX.Element[] = this._createPieces();
+	public componentWillUnmount() {}
+	public componentDidMount() {
+		this._createBoard("");
+	}
 
-    let boardStyle: React.CSSProperties = {
-      position: 'relative',
-      width: BoardBase.boardWidth,
-      height: BoardBase.boardHeight,
-    }
+	public render() {
+		let pieces: JSX.Element[] = this._createPieces();
 
-    let playArea: React.CSSProperties = {
-      position: 'absolute',
-      top: this.state.verticalPadding,
-      left: this.state.horizontalPadding,
-      width: BoardBase.playAreaWidth,
-      height: BoardBase.playAreaHeight
-    }
+		let boardStyle: React.CSSProperties = {
+			position: "relative",
+			width: BoardBase.boardWidth,
+			height: BoardBase.boardHeight,
+		};
 
-    let bg = React.createElement(BgCanvas, {
-      ...this.props,
-      key: 'background',
-      ref: (c) => {this._bg = c}
-    });
+		let playArea: React.CSSProperties = {
+			position: "absolute",
+			top: this.state.verticalPadding,
+			left: this.state.horizontalPadding,
+			width: BoardBase.playAreaWidth,
+			height: BoardBase.playAreaHeight,
+		};
 
-    return (
-      <div style={boardStyle}>
-        {bg}
-        <div key={"playArea"} 
-             style={playArea}>
-          {pieces}
-        </div>
-      </div>
-    );
-  }
+		let bg = React.createElement(BgCanvas, {
+			...this.props,
+			key: "background",
+			ref: (c) => {
+				this._bg = c;
+			},
+		});
 
-  private _createBoard(fenStr: string) {
-    // Call server to interpret FEN and send back the board
+		return (
+			<div style={boardStyle}>
+				{bg}
+				<div key={"playArea"} style={playArea}>
+					{pieces}
+				</div>
+			</div>
+		);
+	}
 
-    let str =
-    "0heakae00" +
-    "000000000" +
-    "0c00000c0" +
-    "p0p0p0p0p" +
-    "000000000" +
-    "000000000" +
-    "P0P0P0P0P" +
-    "0C00000C0" +
-    "000000000" +
-    "RHEAKAEHR";
+	private _createBoard(fenStr: string) {
+		// Call server to interpret FEN and send back the board
 
-    this.setState((prevState) => ({
-      board: str
-    }));
-  }
+		let str =
+			"0heakae00" +
+			"000000000" +
+			"0c00000c0" +
+			"p0p0p0p0p" +
+			"000000000" +
+			"000000000" +
+			"P0P0P0P0P" +
+			"0C00000C0" +
+			"000000000" +
+			"RHEAKAEHR";
 
-  private _createPieces(): JSX.Element[] {
-    if (this._bg === null) 
-      return []; 
+		this.setState((prevState) => ({
+			board: str,
+		}));
+	}
 
-    let pieces:JSX.Element[] = [];
-    this._pieceCollection = [];
+	private _createPieces(): JSX.Element[] {
+		if (this._bg === null) return [];
 
-    for (let i = 0; i < this.state.board.length; i++) {
-      let char = this.state.board[i];
-      if (char == '0')
-        continue;
-        
-      let type: PieceType = char.toLowerCase() as PieceType;
-      let isRed = char === char.toUpperCase();
+		let pieces: JSX.Element[] = [];
+		this._pieceCollection = [];
 
-      let col = i % BoardConst.BOARD_COL;
-      let row = Math.floor(i / BoardConst.BOARD_COL);
-      let x = this.state.horizontalPadding + col * this.state.cellWidth;
-      let y = this.state.verticalPadding + row * this.state.cellHeight;
+		for (let i = 0; i < this.state.board.length; i++) {
+			let char = this.state.board[i];
+			if (char == "0") continue;
 
-      if (this.state.isFlipped) {
-        y = BoardBase.boardHeight - y;
-      }
+			let type: PieceType = char.toLowerCase() as PieceType;
+			let isRed = char === char.toUpperCase();
 
-      pieces.push(
-        React.createElement(Piece, {
-          key: i,
-          x: col,
-          y: row,
-          size: this.state.pieceSize,
-          type: type,
-          isRed: isRed,
-          ref: this._addPieceToCollection,
-          onMouseDown: this._selectPiece
-        })
-      )
-    }
+			let col = i % BoardConst.BOARD_COL;
+			let row = Math.floor(i / BoardConst.BOARD_COL);
+			let x = this.state.horizontalPadding + col * this.state.cellWidth;
+			let y = this.state.verticalPadding + row * this.state.cellHeight;
 
-    return pieces;
-  }
+			if (this.state.isFlipped) {
+				y = BoardBase.boardHeight - y;
+			}
 
-  private _selectPiece = (piece: Piece) => {
-    let index = piece.state.x + piece.state.y * BoardConst.BOARD_COL;
-    let char = this.state.board[index];
+			pieces.push(
+				React.createElement(Piece, {
+					key: i,
+					x: col,
+					y: row,
+					size: this.state.pieceSize,
+					type: type,
+					isRed: isRed,
+					ref: this._addPieceToCollection,
+					onMouseDown: this._selectPiece,
+				}),
+			);
+		}
 
-    // Send the string to the server to check for valid path,
-    // Send format: xchary
-    // Recieve format: pos1/pos2/pos3/pos4/.. Each pos is just x and y and each is 1 digit
+		return pieces;
+	}
 
-    let recievedStr = "";
-    let validPaths = recievedStr.split("/");
+	private _selectPiece = (piece: Piece) => {
+		let index = piece.state.x + piece.state.y * BoardConst.BOARD_COL;
+		let char = this.state.board[index];
 
-    
-  }
+		// Send the string to the server to check for valid path,
+		// Send format: xchary
+		// Receive format: pos1/pos2/pos3/pos4/.. Each pos is just x and y and each is 1 digit
 
-  private _addPieceToCollection = (piece: Piece | null) => {
-    if (piece === null)
-      return;
+		let receivedStr = "";
+		let validPaths = receivedStr.split("/");
+	};
 
-    this._pieceCollection.push(piece);
-  }
+	private _addPieceToCollection = (piece: Piece | null) => {
+		if (piece === null) return;
+
+		this._pieceCollection.push(piece);
+	};
 }
 
 /**
