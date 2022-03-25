@@ -33,6 +33,7 @@ const PossibleMove: React.FunctionComponent<IPossibleMoveProps> = (props) => {
 	return (
 		<canvas
 			onClick={(e) => {
+				e.stopPropagation();
 				if (props.onClick) props.onClick(props.x, props.y, e.nativeEvent);
 			}}
 			style={{

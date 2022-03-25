@@ -162,7 +162,10 @@ export default class Board extends BoardBase<IBoardProps, IBoardState> {
 		// Maybe should just check the move ourself
 
 		if (this._overlay) this._overlay.show(this._board, piece, (x, y, e) => {
-			if (e === SelectionEvent.Canceled) return;
+			if (e === SelectionEvent.Canceled) {
+				piece.zIndex = 0;
+				return;
+			}
 
 			// Send the selected move to the server, server reply whether it is ok or not. Format `{x}{y}{toX}{toY}`
 			

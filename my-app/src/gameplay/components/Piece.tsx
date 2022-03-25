@@ -129,7 +129,6 @@ export default class Piece extends React.Component<IPieceProps, IPieceState> {
 			transform: "translate(-50%, -50%)",
 			position: "absolute",
 			zIndex: this.state.zIndex,
-			animation: ""
 		};
 
 		return (
