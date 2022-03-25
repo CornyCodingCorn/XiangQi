@@ -4,7 +4,7 @@ import * as Sprites from "../../resources/pieces/Index";
 import EventHandler from "../../utils/EventHandler";
 import Draggable from "react-draggable";
 import { MathEx } from "../../utils/MathEx";
-import { PieceType } from "../common/PieceType";
+import { PieceType } from "../common/PieceMove";
 
 export interface IPieceProps {
 	x?: number;
@@ -60,6 +60,8 @@ export default class Piece extends React.Component<IPieceProps, IPieceState> {
 		});
 	}
 
+	private _timer: NodeJS.Timer | null = null;
+
 	public get zIndex() {
 		return this.state.zIndex;
 	}
@@ -93,7 +95,7 @@ export default class Piece extends React.Component<IPieceProps, IPieceState> {
 		let oldX = this.state.x;
 		let oldY = this.state.y;
 
-		let timer = setInterval(() => {
+		this._timer = setInterval(() => {
 			t += step;
 			let t0 = MathEx.easeInOutCubic(t / duration);
 			let deltaT0 = 1 - t0;
@@ -105,7 +107,7 @@ export default class Piece extends React.Component<IPieceProps, IPieceState> {
 
 			if (t >= duration) {
 				callback();
-				clearInterval(timer);
+				if (this._timer) clearInterval(this._timer);
 			}
 		}, step * 1000)
 	}
@@ -119,6 +121,7 @@ export default class Piece extends React.Component<IPieceProps, IPieceState> {
 			return element === this;
 		});
 
+		if (this._timer) clearInterval(this._timer);
 		Piece._instances.splice(index, 1);
 	}
 
@@ -211,4 +214,4 @@ export default class Piece extends React.Component<IPieceProps, IPieceState> {
 	}
 }
 
-export { PieceType } from "../common/PieceType";
+export { PieceType } from "../common/PieceMove";

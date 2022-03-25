@@ -1,23 +1,16 @@
-import { generateMoveKing } from "./King";
+import { BoardConst } from "../components/BoardBase";
+import { generateMoveHorse, generateMoveRawHorse } from "./Horse";
+import { generateMoveKing, generateMoveRawKing } from "./King";
+import { generateMovePawn, generateMoveRawPawn } from "./Pawn";
 import { generateMoveFunc } from "./Piece";
-
-export enum PieceType {
-	King = "k",
-	Advisor = "a",
-	Elephant = "e",
-	Rook = "r",
-	Cannon = "c",
-	Horse = "h",
-	Pawn = "p",
-	Empty = "0"
-}
+import { PieceType } from "./Piece";
 
 export function generateMove(board: string, type: PieceType, x: number, y: number, isRed: boolean): string {
   let func: generateMoveFunc | null = null;
 
   switch (type) {
     case PieceType.King:
-      func = generateMoveKing;
+      func = generateMoveRawKing;
       break;
     case PieceType.Advisor:
       
@@ -32,12 +25,14 @@ export function generateMove(board: string, type: PieceType, x: number, y: numbe
 
       break;
     case PieceType.Horse:
-
+      func = generateMoveRawHorse;
       break;
     case PieceType.Pawn:
-
+      func = generateMoveRawPawn;
       break;
   }
 
   return (func ? func(board, x, y, isRed) : "");
 }
+
+export { PieceType } from "./Piece";

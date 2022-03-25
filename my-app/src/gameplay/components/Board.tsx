@@ -154,8 +154,6 @@ export default class Board extends BoardBase<IBoardProps, IBoardState> {
 	}
 
 	private _selectPiece = (piece: Piece) => {
-		piece.zIndex = 1;
-
 		// Send the string to the server to check for valid path,
 		// Send format: xy
 		// Receive format: pos1/pos2/pos3/pos4/.. Each pos is just x and y and each is 1 digit
@@ -163,10 +161,10 @@ export default class Board extends BoardBase<IBoardProps, IBoardState> {
 
 		if (this._overlay) this._overlay.show(this._board, piece, (x, y, e) => {
 			if (e === SelectionEvent.Canceled) {
-				piece.zIndex = 0;
 				return;
 			}
-
+			piece.zIndex = 1;
+			
 			// Send the selected move to the server, server reply whether it is ok or not. Format `{x}{y}{toX}{toY}`
 			
 			// This is assuming that the server said ok.

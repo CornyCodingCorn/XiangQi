@@ -25,15 +25,11 @@ export default class App extends React.Component<IAppProps> {
 		return this._isLoaded;
 	}
 
-	constructor(props: IAppProps) {
-		super(props);
-		
+	componentDidMount() {
 		ImagesCollection.init(() => {
 			this._isLoaded = true;
 			this.forceUpdate();
 		});
-
-		
 	}
 
 	public render() {

@@ -1,5 +1,6 @@
 import * as React from "react";
 import Vector2 from "../../utils/Vector2";
+import { generateMove } from "../common/PieceMove";
 import { BoardBase, BoardConst, IBoardBaseProps, IBoardBaseStates } from "./BoardBase";
 import Piece, { PieceType } from "./Piece";
 import PossibleMove, { IPossibleMoveProps } from "./PossibleMove";
@@ -94,7 +95,10 @@ export default class Overlay extends React.Component<
 
 		this._selectingPiece = piece;
 		// Calculate the move string
-		let possibleMoves = "00/11/22/33/44/55";
+		let possibleMoves = generateMove(board, piece.state.type, piece.state.x, piece.state.y, piece.state.isRed);
+		if (possibleMoves == "") {
+			return;
+		}
 
 		this.setState({
 			moveString: possibleMoves,
@@ -124,14 +128,16 @@ export default class Overlay extends React.Component<
 		let maxRow = BoardConst.BOARD_ROW - 1;
 		let state = this.state;
 
-		locations.forEach((loc) => {
+		locations.forEach((loc, index) => {
 			moveComponent.push(
 				<PossibleMove
+					key={index}
+
 					onClick={(x, y, event) => {
 						this.selectMove(x, y);
 					}}
-					top={BoardBase.playAreaWidth * (loc.position.x / maxCol)}
-					left={BoardBase.playAreaHeight * (loc.position.y / maxRow)}
+					top={BoardBase.playAreaHeight * (loc.position.y / maxRow)}
+					left={BoardBase.playAreaWidth * (loc.position.x / maxCol)}
 
 					x={loc.position.x}
 					y={loc.position.y}
@@ -172,6 +178,7 @@ function generatePositions(board: string, str: string, isRed: boolean): Location
 	let results: Location[] = [];
 
 	posStr.forEach((value) => {
+		if (value === "") return;
 		try {
 			let x = Number.parseInt(value[0]);
 			let y = Number.parseInt(value[1]);
