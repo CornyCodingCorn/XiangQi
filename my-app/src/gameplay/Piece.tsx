@@ -12,6 +12,7 @@ export enum PieceType {
 	Cannon = "c",
 	Horse = "h",
 	Pawn = "p",
+	Empty = "0"
 }
 
 export interface IPieceProps {

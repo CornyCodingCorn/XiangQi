@@ -8,15 +8,15 @@ import {
 import { default as UtilsColor } from "../utils/Color";
 
 export interface IBgCanvasProps extends IBoardBaseProps {
-	outerPadColor?: number;
-	outerPadPercentage?: number;
-	padColor?: number;
-	boardColor?: number;
+	outerPadColor: number;
+	outerPadPercentage: number;
+	padColor: number;
+	boardColor: number;
 
-	lineColor?: number;
+	lineColor: number;
 
-	lineThickness?: number;
-	lineOpacity?: number;
+	lineThickness: number;
+	lineOpacity: number;
 }
 
 export interface IBgCanvasStates extends IBoardBaseStates {
@@ -40,15 +40,7 @@ export class BgCanvas extends BoardBase<IBgCanvasProps, IBgCanvasStates> {
 		super(props);
 
 		this.state = {
-			...this.state,
-			outerPadPercentage: this.props.outerPadPercentage || 0,
-			padColor: this.props.padColor || 0,
-			outerPadColor: this.props.outerPadColor || 0,
-			boardColor: this.props.boardColor || 0,
-			lineColor: this.props.lineColor || 0,
-
-			lineThickness: this.props.lineThickness || 1,
-			lineOpacity: this.props.lineOpacity || 1,
+			...this.props,
 		};
 	}
 

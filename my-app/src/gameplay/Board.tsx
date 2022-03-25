@@ -1,15 +1,16 @@
 import * as React from "react";
+import { StringUtils } from "../utils/StringUtils";
 import { BgCanvas, IBgCanvasProps, IBgCanvasStates } from "./BgCanvas";
 import { BoardBase, BoardConst } from "./common/BoardBase";
-import { IOverlayProps, IOverlayStates } from "./Overlay";
+import Overlay, { IOverlayProps, IOverlayStates, SelectionEvent } from "./Overlay";
 import Piece, { PieceType } from "./Piece";
 
 export interface IBoardProps extends IBgCanvasProps, IOverlayProps {
 	boardFEN?: string;
 
-	pieceSize?: number;
+	pieceSize: number;
 
-	isFlipped?: boolean;
+	isFlipped: boolean;
 }
 
 export interface IBoardState extends IBgCanvasStates, IOverlayStates {
@@ -23,17 +24,17 @@ export interface IBoardState extends IBgCanvasStates, IOverlayStates {
 export default class Board extends BoardBase<IBoardProps, IBoardState> {
 	private static readonly BOARD_NEW_FEN = "";
 
+	private _board: string = "";
 	private _pieceCollection: Piece[] = [];
 	private _bg: BgCanvas | null = null;
+	private _overlay: Overlay | null = null;
 
 	constructor(props: IBoardProps) {
 		super(props);
 
 		this.state = {
-			...this.state,
+			...this.props,
 			board: "",
-			isFlipped: this.props.isFlipped || false,
-			pieceSize: this.props.pieceSize || Piece.DEFAULT_SIZE,
 		};
 	}
 
@@ -44,6 +45,7 @@ export default class Board extends BoardBase<IBoardProps, IBoardState> {
 
 	public render() {
 		let pieces: JSX.Element[] = this._createPieces();
+		this._board = this.state.board;
 
 		let boardStyle: React.CSSProperties = {
 			position: "relative",
@@ -60,12 +62,20 @@ export default class Board extends BoardBase<IBoardProps, IBoardState> {
 		};
 
 		let bg = React.createElement(BgCanvas, {
-			...this.props,
+			...this.state,
 			key: "background",
 			ref: (c) => {
 				this._bg = c;
 			},
 		});
+
+		let overlay = React.createElement(Overlay, {
+			...this.state,
+			key: "overlay",
+			ref: (o) => {
+				this._overlay = o;
+			}
+		})
 
 		return (
 			<div style={boardStyle}>
@@ -73,6 +83,7 @@ export default class Board extends BoardBase<IBoardProps, IBoardState> {
 				<div key={"playArea"} style={playArea}>
 					{pieces}
 				</div>
+				{overlay}
 			</div>
 		);
 	}
@@ -105,7 +116,7 @@ export default class Board extends BoardBase<IBoardProps, IBoardState> {
 
 		for (let i = 0; i < this.state.board.length; i++) {
 			let char = this.state.board[i];
-			if (char == "0") continue;
+			if (char == PieceType.Empty) continue;
 
 			let type: PieceType = char.toLowerCase() as PieceType;
 			let isRed = char === char.toUpperCase();
@@ -138,14 +149,32 @@ export default class Board extends BoardBase<IBoardProps, IBoardState> {
 
 	private _selectPiece = (piece: Piece) => {
 		let index = piece.state.x + piece.state.y * BoardConst.BOARD_COL;
-		let char = this.state.board[index];
+
 
 		// Send the string to the server to check for valid path,
-		// Send format: xchary
+		// Send format: xy
 		// Receive format: pos1/pos2/pos3/pos4/.. Each pos is just x and y and each is 1 digit
+		// Maybe should just check the move ourself
 
-		let receivedStr = "";
-		let validPaths = receivedStr.split("/");
+		if (this._overlay) this._overlay.show(this._board, piece, (x, y, e) => {
+			if (e === SelectionEvent.Canceled) return;
+
+			// Send the selected move to the server, server reply whether it is ok or not. Format `{x}{y}{toX}{toY}`
+			
+			// This is assuming that the server said ok.
+			// Maybe not rerendering but just move the piece by playing animation.
+			// The state.board is just for reloading the board.
+
+			let oldIndex = piece.state.x + piece.state.y * BoardConst.BOARD_COL;
+			let newIndex = x + y * BoardConst.BOARD_COL;
+			this._board = StringUtils.replaceCharAt(this._board, this._board[oldIndex], newIndex);
+			this._board = StringUtils.replaceCharAt(this._board, PieceType.Empty, oldIndex);
+
+			piece.setState({
+				x: x,
+				y: y,
+			});
+		});
 	};
 
 	private _addPieceToCollection = (piece: Piece | null) => {
