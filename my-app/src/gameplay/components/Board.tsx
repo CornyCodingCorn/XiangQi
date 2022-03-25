@@ -1,7 +1,7 @@
 import * as React from "react";
-import { StringUtils } from "../utils/StringUtils";
+import { StringUtils } from "../../utils/StringUtils";
 import { BgCanvas, IBgCanvasProps, IBgCanvasStates } from "./BgCanvas";
-import { BoardBase, BoardConst } from "./common/BoardBase";
+import { BoardBase, BoardConst } from "./BoardBase";
 import Overlay, { IOverlayProps, IOverlayStates, SelectionEvent } from "./Overlay";
 import Piece, { PieceType } from "./Piece";
 
@@ -154,7 +154,7 @@ export default class Board extends BoardBase<IBoardProps, IBoardState> {
 	}
 
 	private _selectPiece = (piece: Piece) => {
-		let index = piece.state.x + piece.state.y * BoardConst.BOARD_COL;
+		piece.zIndex = 1;
 
 		// Send the string to the server to check for valid path,
 		// Send format: xy
@@ -172,20 +172,18 @@ export default class Board extends BoardBase<IBoardProps, IBoardState> {
 
 			let oldIndex = piece.state.x + piece.state.y * BoardConst.BOARD_COL;
 			let newIndex = x + y * BoardConst.BOARD_COL;
-			let char = this._board[newIndex];
-
-			this._board = StringUtils.replaceCharAt(this._board, PieceType.Empty, newIndex);
-			if (char !== PieceType.Empty) {
-				this.setState({board: this._board});
-			}
 
 			this._board = StringUtils.replaceCharAt(this._board, this._board[oldIndex], newIndex);
 			this._board = StringUtils.replaceCharAt(this._board, PieceType.Empty, oldIndex);
 
-			piece.setState({
-				x: x,
-				y: y,
-			});
+			// To tell react that it needs to delete the old piece and not the new one.
+			let midStepBoard = StringUtils.replaceCharAt(this._board, PieceType.Empty, newIndex);
+
+			piece.MoveTo(x, y, 0.25, () => {
+				this.setState({board: midStepBoard});
+				this.setState({board: this._board});
+				piece.zIndex = 0;
+			})
 		});
 	};
 

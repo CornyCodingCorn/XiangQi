@@ -1,19 +1,10 @@
 import * as React from "react";
-import ImagesCollection from "../resources/ImagesCollection";
-import * as Sprites from "../resources/pieces/Index";
-import EventHandler from "../utils/EventHandler";
+import ImagesCollection from "../../resources/ImagesCollection";
+import * as Sprites from "../../resources/pieces/Index";
+import EventHandler from "../../utils/EventHandler";
 import Draggable from "react-draggable";
-
-export enum PieceType {
-	King = "k",
-	Advisor = "a",
-	Elephant = "e",
-	Rook = "r",
-	Cannon = "c",
-	Horse = "h",
-	Pawn = "p",
-	Empty = "0"
-}
+import { MathEx } from "../../utils/MathEx";
+import { PieceType } from "../common/PieceType";
 
 export interface IPieceProps {
 	x?: number;
@@ -96,6 +87,29 @@ export default class Piece extends React.Component<IPieceProps, IPieceState> {
 		};
 	}
 
+	public MoveTo(x: number, y: number, duration: number, callback: () => void) {
+		let t = 0;
+		let step = 0.01;
+		let oldX = this.state.x;
+		let oldY = this.state.y;
+
+		let timer = setInterval(() => {
+			t += step;
+			let t0 = MathEx.easeInOutCubic(t / duration);
+			let deltaT0 = 1 - t0;
+
+			this.setState({
+				x: deltaT0 * oldX + t0 * x,
+				y: deltaT0 * oldY + t0 * y 
+			})
+
+			if (t >= duration) {
+				callback();
+				clearInterval(timer);
+			}
+		}, step * 1000)
+	}
+
 	public componentDidMount() {
 		Piece._instances.push(this);
 	}
@@ -114,7 +128,8 @@ export default class Piece extends React.Component<IPieceProps, IPieceState> {
 			top: `${(this.state.y * 100) / (Piece.BOARD_ROW - 1)}%`,
 			transform: "translate(-50%, -50%)",
 			position: "absolute",
-			zIndex: this.state.zIndex
+			zIndex: this.state.zIndex,
+			animation: ""
 		};
 
 		return (
@@ -196,3 +211,5 @@ export default class Piece extends React.Component<IPieceProps, IPieceState> {
 		}
 	}
 }
+
+export { PieceType } from "../common/PieceType";

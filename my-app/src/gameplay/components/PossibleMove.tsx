@@ -1,5 +1,5 @@
 import * as React from "react";
-import Color from "../utils/Color";
+import Color from "../../utils/Color";
 
 export interface IPossibleMoveProps {
 	width: number;
