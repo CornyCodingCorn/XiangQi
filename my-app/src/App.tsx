@@ -1,8 +1,8 @@
 import "./App.css";
-import Piece, { PieceType } from "./gameplay/Piece";
+import Piece, { PieceType } from "./gameplay/components/Piece";
 import ImagesCollection from "./resources/ImagesCollection";
 import * as React from "react";
-import Board from "./gameplay/Board";
+import Board from "./gameplay/components/Board";
 
 const BOARD_COLOR = 0xefcc8b;
 const PAD_COLOR = 0x724726;
@@ -25,12 +25,18 @@ export default class App extends React.Component<IAppProps> {
 		return this._isLoaded;
 	}
 
-	public render() {
+	constructor(props: IAppProps) {
+		super(props);
+		
 		ImagesCollection.init(() => {
 			this._isLoaded = true;
 			this.forceUpdate();
 		});
 
+		
+	}
+
+	public render() {
 		let component: JSX.Element;
 		if (this._isLoaded) {
 			component = (
