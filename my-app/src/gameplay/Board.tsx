@@ -24,7 +24,16 @@ export interface IBoardState extends IBgCanvasStates, IOverlayStates {
 export default class Board extends BoardBase<IBoardProps, IBoardState> {
 	private static readonly BOARD_NEW_FEN = "";
 
+	// This board is for constant change, the state board is only for removing/adding pieces
 	private _board: string = "";
+	public get board(): string {return this._board;}
+	public set board(value) {
+		this._board = value;
+		this.setState({
+			board: this._board,
+		})
+	}
+
 	private _pieceCollection: Piece[] = [];
 	private _bg: BgCanvas | null = null;
 	private _overlay: Overlay | null = null;
@@ -45,7 +54,6 @@ export default class Board extends BoardBase<IBoardProps, IBoardState> {
 
 	public render() {
 		let pieces: JSX.Element[] = this._createPieces();
-		this._board = this.state.board;
 
 		let boardStyle: React.CSSProperties = {
 			position: "relative",
@@ -103,9 +111,7 @@ export default class Board extends BoardBase<IBoardProps, IBoardState> {
 			"000000000" +
 			"RHEAKAEHR";
 
-		this.setState((prevState) => ({
-			board: str,
-		}));
+		this.board = str;
 	}
 
 	private _createPieces(): JSX.Element[] {
@@ -150,7 +156,6 @@ export default class Board extends BoardBase<IBoardProps, IBoardState> {
 	private _selectPiece = (piece: Piece) => {
 		let index = piece.state.x + piece.state.y * BoardConst.BOARD_COL;
 
-
 		// Send the string to the server to check for valid path,
 		// Send format: xy
 		// Receive format: pos1/pos2/pos3/pos4/.. Each pos is just x and y and each is 1 digit
@@ -167,6 +172,13 @@ export default class Board extends BoardBase<IBoardProps, IBoardState> {
 
 			let oldIndex = piece.state.x + piece.state.y * BoardConst.BOARD_COL;
 			let newIndex = x + y * BoardConst.BOARD_COL;
+			let char = this._board[newIndex];
+
+			this._board = StringUtils.replaceCharAt(this._board, PieceType.Empty, newIndex);
+			if (char !== PieceType.Empty) {
+				this.setState({board: this._board});
+			}
+
 			this._board = StringUtils.replaceCharAt(this._board, this._board[oldIndex], newIndex);
 			this._board = StringUtils.replaceCharAt(this._board, PieceType.Empty, oldIndex);
 

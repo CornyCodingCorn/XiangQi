@@ -46,6 +46,7 @@ export interface IPieceState {
 	isRed: boolean;
 
 	type: PieceType;
+	zIndex: number;
 }
 
 export default class Piece extends React.Component<IPieceProps, IPieceState> {
@@ -68,6 +69,16 @@ export default class Piece extends React.Component<IPieceProps, IPieceState> {
 		});
 	}
 
+	public get zIndex() {
+		return this.state.zIndex;
+	}
+
+	public set zIndex(value) {
+		this.setState({
+			zIndex: value
+		})
+	}
+
 	private _canvas: HTMLCanvasElement | null = null;
 
 	constructor(props: IPieceProps) {
@@ -81,6 +92,7 @@ export default class Piece extends React.Component<IPieceProps, IPieceState> {
 			clipWidth: props.clipWidth || Piece.DEFAULT_CLIP_WIDTH,
 			clipHeight: props.clipHeight || Piece.DEFAULT_CLIP_HEIGHT,
 			type: props.type || PieceType.King,
+			zIndex: 0,
 		};
 	}
 
@@ -102,6 +114,7 @@ export default class Piece extends React.Component<IPieceProps, IPieceState> {
 			top: `${(this.state.y * 100) / (Piece.BOARD_ROW - 1)}%`,
 			transform: "translate(-50%, -50%)",
 			position: "absolute",
+			zIndex: this.state.zIndex
 		};
 
 		return (
@@ -128,7 +141,7 @@ export default class Piece extends React.Component<IPieceProps, IPieceState> {
 	}
 
 	private _initCanvas(canvas: HTMLCanvasElement | null) {
-		if (canvas == null) return;
+		if (canvas == null || this._canvas == canvas) return;
 
 		this._canvas = canvas;
 		let context = canvas.getContext("2d");
