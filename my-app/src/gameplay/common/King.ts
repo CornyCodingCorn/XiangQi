@@ -20,11 +20,11 @@ export var generateMoveRawKing: generateMoveFunc = (board: string, x: number, y:
   }
 
   let checkY = y + 1;
-  if (checkY < 3) {
+  if (isRed || checkY < 3) {
     result += Piece.generatePos(board, x, checkY, isRed);
   }
   checkY = y - 1;
-  if (checkY > 6) {
+  if (!isRed || checkY > 6) {
     result += Piece.generatePos(board, x, checkY, isRed);
   }
 

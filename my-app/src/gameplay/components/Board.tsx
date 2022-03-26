@@ -181,6 +181,7 @@ export default class Board extends BoardBase<IBoardProps, IBoardState> {
 			let midStepBoard = StringUtils.replaceCharAt(this._board, PieceType.Empty, newIndex);
 
 			piece.MoveTo(x, y, 0.25, () => {
+				if (this._overlay) this._overlay.hide();
 				this.setState({board: midStepBoard});
 				this.setState({board: this._board});
 				piece.zIndex = 0;

@@ -109,12 +109,16 @@ export default class Overlay extends React.Component<
 	}
 
 	public cancelSelection() {
-		this.hide();
+		this.setState({
+			moveString: "",
+		})
 		if (this._callback) this._callback(-1, -1, SelectionEvent.Canceled);
 	}
 
 	public selectMove(x: number, y: number) {
-		this.hide();
+		this.setState({
+			moveString: "",
+		})
 		if (this._callback) this._callback(x, y, SelectionEvent.Selected);
 	}
 

@@ -1,7 +1,12 @@
 import Vector2 from "../../utils/Vector2";
 import { BoardConst } from "../components/BoardBase";
 
-export type generateMoveFunc = (board: string, x: number, y: number, isRed: boolean) => string;
+export type generateMoveFunc = (
+	board: string,
+	x: number,
+	y: number,
+	isRed: boolean,
+) => string;
 
 export enum PieceType {
 	King = "k",
@@ -11,39 +16,99 @@ export enum PieceType {
 	Cannon = "c",
 	Horse = "h",
 	Pawn = "p",
-	Empty = "0"
+	Empty = "0",
 }
 
 export class Piece {
-  type: PieceType = PieceType.Empty;
-  isRed: boolean = false;
-  location: Vector2 = Vector2.create(0, 0);
+	type: PieceType = PieceType.Empty;
+	isRed: boolean = false;
+	location: Vector2 = Vector2.create(0, 0);
 
-  public static isSameColor(board: string, x: number, y: number, isRed: boolean): boolean {
-    let char = Piece.getPiece(board, x, y);
-    if (char === PieceType.Empty) return false;
+	public static isSameColor(piece: string, isRed: boolean): boolean;
+	public static isSameColor(
+		board: string,
+		isRed: boolean,
+		x: number,
+		y: number,
+	): boolean;
+	public static isSameColor(
+		info: string,
+		isRed: boolean,
+		x?: number,
+		y?: number,
+	): boolean {
+		let char = "";
+		if (!x || !y) char = info;
+		else char = Piece.getPiece(info, x, y);
 
-    if (isRed) {
-      return char.toUpperCase() === char;
-    } else {
-      return char.toLowerCase() === char;
-    }
-  }
+		if (char === PieceType.Empty) return false;
 
-  public static getPiece(board: string, x: number, y: number): string {
-    return board[x + y * BoardConst.BOARD_COL];
-  }
+		if (isRed) {
+			return char.toUpperCase() === char;
+		} else {
+			return char.toLowerCase() === char;
+		}
+	}
 
-  public static isPosValid(x: number, y: number): boolean {
-    return x >= 0 && x < BoardConst.BOARD_COL && y >= 0 && y < BoardConst.BOARD_ROW;
-  }
+	public static getPiece(board: string, x: number, y: number): string {
+		return board[x + y * BoardConst.BOARD_COL];
+	}
 
-  public static generatePos(board: string, x: number, y: number, isRed: boolean): string {
-    let result = "";
-    if (Piece.isPosValid(x, y) && !Piece.isSameColor(board, x, y, isRed)) {
-      result = `${x}${y}/`;
-    }
+	public static isPosValid(x: number, y: number): boolean {
+		return (
+			x >= 0 && x < BoardConst.BOARD_COL && y >= 0 && y < BoardConst.BOARD_ROW
+		);
+	}
 
-    return result;
-  }
+	public static generatePos(
+		board: string,
+		x: number,
+		y: number,
+		isRed: boolean,
+		forceReturn: boolean = false,
+	): string {
+		let result = "";
+		let piece = Piece.getPiece(board, x, y);
+		if (
+			Piece.isPosValid(x, y) &&
+			(!Piece.isSameColor(piece, isRed) || forceReturn)
+		) {
+			result = `${x}${y}${piece}/`;
+		}
+
+		return result;
+	}
+
+	// Generate move until hit invalid or another piece
+	public static generateGenericMove(
+		board: string,
+		x: number,
+		y: number,
+		isRed: boolean,
+		deltaX: number,
+		deltaY: number,
+		allowKill: boolean,
+	): string {
+		let isValid = true;
+		let anotherPiece = false;
+		let result = "";
+
+		do {
+			x += deltaX;
+			y += deltaY;
+
+			isValid = Piece.isPosValid(x, y);
+			if (isValid) {
+				let str = Piece.generatePos(board, x, y, isRed);
+				anotherPiece = str === "" || str[2] !== PieceType.Empty;
+				if (str[2] !== PieceType.Empty) {
+					if (allowKill) result += str;
+				} else {
+					result += str;
+				}
+			}
+		} while (isValid && !anotherPiece);
+
+		return result;
+	}
 }

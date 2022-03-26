@@ -5,17 +5,22 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Attach to Chrome",
-            "port": 9222,
+            "name": "Launch index.html",
+            "type": "firefox",
             "request": "attach",
-            "type": "pwa-chrome",
-            "webRoot": "${workspaceFolder}"
+            "pathMappings": [
+                {
+                    "url": "file:///home/cornpc/Projects/Games/XiangQi/my-app/src",
+                    "path": "${workspaceFolder}/my-app/src"
+                }
+            ]
         },
         {
-            "type": "pwa-chrome",
+            "name": "Launch localhost",
+            "type": "firefox",
             "request": "launch",
-            "name": "Launch Chrome against localhost",
-            "url": "http://localhost:3000",
+            "reAttach": true,
+            "url": "http://localhost/index.html",
             "webRoot": "${workspaceFolder}"
         }
     ]
