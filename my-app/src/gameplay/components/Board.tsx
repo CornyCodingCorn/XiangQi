@@ -4,6 +4,7 @@ import { BgCanvas, IBgCanvasProps, IBgCanvasStates } from "./BgCanvas";
 import { BoardBase, BoardConst } from "./BoardBase";
 import Overlay, { IOverlayProps, IOverlayStates, SelectionEvent } from "./Overlay";
 import Piece, { PieceType } from "./Piece";
+import { Board as BoardLogic } from "../common/Board"
 
 export interface IBoardProps extends IBgCanvasProps, IOverlayProps {
 	boardFEN?: string;
@@ -25,12 +26,12 @@ export default class Board extends BoardBase<IBoardProps, IBoardState> {
 	private static readonly BOARD_NEW_FEN = "";
 
 	// This board is for constant change, the state board is only for removing/adding pieces
-	private _board: string = "";
-	public get board(): string {return this._board;}
+	private _board: BoardLogic = BoardLogic.getInstance();
+	public get board(): string {return this._board.getBoard();}
 	public set board(value) {
-		this._board = value;
+		this._board.setBoard(value);
 		this.setState({
-			board: this._board,
+			board: this._board.getBoard(),
 		})
 	}
 
@@ -100,7 +101,7 @@ export default class Board extends BoardBase<IBoardProps, IBoardState> {
 		// Call server to interpret FEN and send back the board
 
 		let str =
-			"0heakae00" +
+			"rheakaehr" +
 			"000000000" +
 			"0c00000c0" +
 			"p0p0p0p0p" +
@@ -159,8 +160,9 @@ export default class Board extends BoardBase<IBoardProps, IBoardState> {
 		// Receive format: pos1/pos2/pos3/pos4/.. Each pos is just x and y and each is 1 digit
 		// Maybe should just check the move ourself
 
-		if (this._overlay) this._overlay.show(this._board, piece, (x, y, e) => {
+		if (this._overlay) this._overlay.show(this._board.getBoard(), piece, (x, y, e) => {
 			if (e === SelectionEvent.Canceled) {
+				if (this._overlay) this._overlay.hide();
 				return;
 			}
 			piece.zIndex = 1;
@@ -173,17 +175,18 @@ export default class Board extends BoardBase<IBoardProps, IBoardState> {
 
 			let oldIndex = piece.state.x + piece.state.y * BoardConst.BOARD_COL;
 			let newIndex = x + y * BoardConst.BOARD_COL;
+			let boardStr = 
 
-			this._board = StringUtils.replaceCharAt(this._board, this._board[oldIndex], newIndex);
-			this._board = StringUtils.replaceCharAt(this._board, PieceType.Empty, oldIndex);
+			this._board.setBoard(StringUtils.replaceCharAt(this._board.getBoard(), this._board.getBoard()[oldIndex], newIndex));
+			this._board.setBoard(StringUtils.replaceCharAt(this._board.getBoard(), PieceType.Empty, oldIndex));
 
 			// To tell react that it needs to delete the old piece and not the new one.
-			let midStepBoard = StringUtils.replaceCharAt(this._board, PieceType.Empty, newIndex);
+			let midStepBoard = StringUtils.replaceCharAt(this._board.getBoard(), PieceType.Empty, newIndex);
 
 			piece.MoveTo(x, y, 0.25, () => {
 				if (this._overlay) this._overlay.hide();
 				this.setState({board: midStepBoard});
-				this.setState({board: this._board});
+				this.setState({board: this._board.getBoard()});
 				piece.zIndex = 0;
 			})
 		});

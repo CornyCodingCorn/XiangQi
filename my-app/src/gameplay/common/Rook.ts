@@ -1,7 +1,10 @@
 import { generateMoveFunc, Piece } from "./Piece";
 
 export var generateMoveRook: generateMoveFunc = (board: string, x: number, y: number, isRed: boolean) => {
+  let rawMove = generateMoveRawRook(board, x, y, isRed);
+  let arr = rawMove.split("/");
 
+  
   return "";
 }
 

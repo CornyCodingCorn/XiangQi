@@ -1,23 +1,6 @@
 import Vector2 from "../../utils/Vector2";
 import { BoardConst } from "../components/BoardBase";
-
-export type generateMoveFunc = (
-	board: string,
-	x: number,
-	y: number,
-	isRed: boolean,
-) => string;
-
-export enum PieceType {
-	King = "k",
-	Advisor = "a",
-	Elephant = "e",
-	Rook = "r",
-	Cannon = "c",
-	Horse = "h",
-	Pawn = "p",
-	Empty = "0",
-}
+import { PieceType } from "./PieceMove";
 
 export class Piece {
 	type: PieceType = PieceType.Empty;
@@ -52,6 +35,40 @@ export class Piece {
 
 	public static getPiece(board: string, x: number, y: number): string {
 		return board[x + y * BoardConst.BOARD_COL];
+	}
+
+	public static getPieceType(board: string, x: number, y: number): PieceType {
+		let char = board[x + y * BoardConst.BOARD_COL].toLowerCase();
+		return char as PieceType;
+	}
+
+	public static isPieceRed(board: string, x: number, y: number): boolean {
+		let char = this.getPiece(board, x, y);
+		return char === char.toUpperCase();
+	}
+
+	public static getPieceObject(board: string, x: number, y: number): Piece 
+	public static getPieceObject(board: string, index: number): Piece 
+	public static getPieceObject(board: string, x: number, y?: number): Piece {
+		let posX = 0;
+		let posY = 0;
+		if (y) {
+			let posX = x;
+			let posY = y;
+		} else {
+			let posX = x % BoardConst.BOARD_COL;
+			let posY = Math.floor(x / BoardConst.BOARD_COL);
+		}
+
+
+		let result = new Piece();
+		result.location.x = posX;
+		result.location.y = posY;
+		result.type = this.getPieceType(board, posX, posY);
+
+		let char = this.isPieceRed(board, posX, posY);
+
+		return result;
 	}
 
 	public static isPosValid(x: number, y: number): boolean {
@@ -112,3 +129,6 @@ export class Piece {
 		return result;
 	}
 }
+
+export { PieceType } from "./PieceMove";
+export type { generateMoveFunc } from "./PieceMove";
