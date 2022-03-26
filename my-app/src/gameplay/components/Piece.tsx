@@ -4,7 +4,7 @@ import * as Sprites from "../../resources/pieces/Index";
 import EventHandler from "../../utils/EventHandler";
 import Draggable from "react-draggable";
 import { MathEx } from "../../utils/MathEx";
-import { PieceType } from "../common/PieceMove";
+import { PieceType } from "../common/Piece";
 
 export interface IPieceProps {
 	x?: number;
@@ -214,4 +214,4 @@ export default class Piece extends React.Component<IPieceProps, IPieceState> {
 	}
 }
 
-export { PieceType } from "../common/PieceMove";
+export { PieceType } from "../common/Piece";

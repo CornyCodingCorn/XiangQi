@@ -12,6 +12,10 @@
                 {
                     "url": "file:///home/cornpc/Projects/Games/XiangQi/my-app/src",
                     "path": "${workspaceFolder}/my-app/src"
+                },
+                {
+                    "url": "file:///home/cornpc/Projects/Games/XiangQi/my-app/src",
+                    "path": "${workspaceFolder}/my-app/src"
                 }
             ]
         },

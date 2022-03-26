@@ -1,9 +1,9 @@
 import * as React from "react";
 import Vector2 from "../../utils/Vector2";
-import { generateMove } from "../common/PieceMove";
 import { BoardBase, BoardConst, IBoardBaseProps, IBoardBaseStates } from "./BoardBase";
 import Piece, { PieceType } from "./Piece";
 import PossibleMove, { IPossibleMoveProps } from "./PossibleMove";
+import { Board as BoardLogic } from "../common/Board"
 
 const DELIMITER = "/";
 type selectCallback = (x:number, y:number, event: SelectionEvent) => void;
@@ -90,12 +90,12 @@ export default class Overlay extends React.Component<
 		this.forceUpdate();
 	}
 
-	public show(board: string, piece: Piece, callback: selectCallback) {
+	public show(piece: Piece, callback: selectCallback) {
 		if (this.state.moveVisible) return;
 
 		this._selectingPiece = piece;
 		// Calculate the move string
-		let possibleMoves = generateMove(board, piece.state.type, piece.state.x, piece.state.y, piece.state.isRed);
+		let possibleMoves = BoardLogic.generateMove(piece.state.type, piece.state.x, piece.state.y, piece.state.isRed);
 		if (possibleMoves == "") {
 			return;
 		}
@@ -103,7 +103,7 @@ export default class Overlay extends React.Component<
 		this.setState({
 			moveString: possibleMoves,
 			moveVisible: true,
-			board: board
+			board: BoardLogic.getInstance().getBoard()
 		})
 		this._callback = callback;
 	}

@@ -1,6 +1,24 @@
 import Vector2 from "../../utils/Vector2";
 import { BoardConst } from "../components/BoardBase";
-import { PieceType } from "./PieceMove";
+
+export type generateMoveFunc = (
+	board: string,
+	x: number,
+	y: number,
+	isRed: boolean,
+) => string;
+
+
+export enum PieceType {
+	King = "k",
+	Advisor = "a",
+	Elephant = "e",
+	Rook = "r",
+	Cannon = "c",
+	Horse = "h",
+	Pawn = "p",
+	Empty = "0",
+}
 
 export class Piece {
 	type: PieceType = PieceType.Empty;
@@ -53,20 +71,18 @@ export class Piece {
 		let posX = 0;
 		let posY = 0;
 		if (y) {
-			let posX = x;
-			let posY = y;
+			posX = x;
+			posY = y;
 		} else {
-			let posX = x % BoardConst.BOARD_COL;
-			let posY = Math.floor(x / BoardConst.BOARD_COL);
+			posX = x % BoardConst.BOARD_COL;
+			posY = Math.floor(x / BoardConst.BOARD_COL);
 		}
-
 
 		let result = new Piece();
 		result.location.x = posX;
 		result.location.y = posY;
 		result.type = this.getPieceType(board, posX, posY);
-
-		let char = this.isPieceRed(board, posX, posY);
+		result.isRed = this.isPieceRed(board, posX, posY);
 
 		return result;
 	}
@@ -129,6 +145,3 @@ export class Piece {
 		return result;
 	}
 }
-
-export { PieceType } from "./PieceMove";
-export type { generateMoveFunc } from "./PieceMove";

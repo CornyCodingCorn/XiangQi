@@ -1,11 +1,6 @@
 import { generateMoveFunc, Piece, PieceType } from "./Piece";
 
 export var generateMoveHorse: generateMoveFunc = (board: string, x: number, y: number, isRed: boolean) => {
-
-  return "";
-}
-
-export var generateMoveRawHorse: generateMoveFunc = (board: string, x: number, y: number, isRed: boolean) => {
   let result = "";
   if (isValid(board, x, y + 1)) {
     result += Piece.generatePos(board, x - 1, y + 2, isRed);

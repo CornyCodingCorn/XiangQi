@@ -1,11 +1,6 @@
 import { generateMoveFunc, Piece, PieceType } from "./Piece";
 
 export var generateMoveCanon: generateMoveFunc = (board: string, x: number, y: number, isRed: boolean) => {
-
-  return "";
-}
-
-export var generateMoveRawCanon: generateMoveFunc = (board: string, x: number, y: number, isRed: boolean) => {
   let result = "";
   result += _generateInDirection(board, x, y, isRed, -1,  0);
   result += _generateInDirection(board, x, y, isRed, +1,  0);

@@ -3,7 +3,6 @@ import Piece, { PieceType } from "./gameplay/components/Piece";
 import ImagesCollection from "./resources/ImagesCollection";
 import * as React from "react";
 import Board from "./gameplay/components/Board";
-import { initializePieces } from "./gameplay/common/PieceInitializer";
 
 const BOARD_COLOR = 0xefcc8b;
 const PAD_COLOR = 0x724726;
@@ -31,8 +30,6 @@ export default class App extends React.Component<IAppProps> {
 			this._isLoaded = true;
 			this.forceUpdate();
 		});
-
-		initializePieces();
 	}
 
 	public render() {

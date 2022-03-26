@@ -160,7 +160,7 @@ export default class Board extends BoardBase<IBoardProps, IBoardState> {
 		// Receive format: pos1/pos2/pos3/pos4/.. Each pos is just x and y and each is 1 digit
 		// Maybe should just check the move ourself
 
-		if (this._overlay) this._overlay.show(this._board.getBoard(), piece, (x, y, e) => {
+		if (this._overlay) this._overlay.show(piece, (x, y, e) => {
 			if (e === SelectionEvent.Canceled) {
 				if (this._overlay) this._overlay.hide();
 				return;
