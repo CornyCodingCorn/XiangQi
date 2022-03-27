@@ -133,10 +133,10 @@ export class Board extends BoardInfo {
 
 		let king: Piece = isRed ? board.blackKing : board.redKing;
 		let enemies: Piece[] = [
+      ...board.canons,
+      ...board.rooks,
 			...board.horses,
-			...board.rooks,
 			...board.pawns,
-			...board.canons,
 		];
 		let ourKing: Piece = !isRed ? board.blackKing : board.redKing;
 
