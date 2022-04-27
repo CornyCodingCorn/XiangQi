@@ -1,4 +1,3 @@
-import { BoardConst } from "../components/BoardBase";
 import { generateMoveFunc, Piece } from "./Piece";
 
 // Without checking complex king checkmate

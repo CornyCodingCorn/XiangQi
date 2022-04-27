@@ -1,5 +1,4 @@
 import React from "react";
-import Piece from "./Piece";
 
 export interface IBoardBaseProps {
 	cellWidth: number;

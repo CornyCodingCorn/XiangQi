@@ -7,7 +7,7 @@ import Piece, { PieceType } from "./Piece";
 import { Board as BoardLogic } from "../common/Board"
 
 export interface IBoardProps extends IBgCanvasProps, IOverlayProps {
-	boardFEN?: string;
+	board: string;
 
 	pieceSize: number;
 
@@ -23,9 +23,19 @@ export interface IBoardState extends IBgCanvasStates, IOverlayStates {
 }
 
 export default class Board extends BoardBase<IBoardProps, IBoardState> {
-	private static readonly BOARD_NEW_FEN = "";
+	public static readonly BOARD_STR = 
+	"rheakaehr" +
+	"000000000" +
+	"0c00000c0" +
+	"p0p0p0p0p" +
+	"000000000" +
+	"000000000" +
+	"P0P0P0P0P" +
+	"0C00000C0" +
+	"RHEAKAEHR";
 
 	// This board is for constant change, the state board is only for removing/adding pieces
+	
 	private _board: BoardLogic = BoardLogic.getInstance();
 	public get board(): string {return this._board.getBoard();}
 	public set board(value) {
@@ -41,16 +51,12 @@ export default class Board extends BoardBase<IBoardProps, IBoardState> {
 
 	constructor(props: IBoardProps) {
 		super(props);
-
-		this.state = {
-			...this.props,
-			board: "",
-		};
 	}
 
-	public componentWillUnmount() {}
-	public componentDidMount() {
-		this._createBoard("");
+	componentDidUpdate() {
+		this.state = {
+			...this.props,
+		};
 	}
 
 	public render() {
@@ -97,24 +103,6 @@ export default class Board extends BoardBase<IBoardProps, IBoardState> {
 		);
 	}
 
-	private _createBoard(fenStr: string) {
-		// Call server to interpret FEN and send back the board
-
-		let str =
-			"rheakaehr" +
-			"000000000" +
-			"0c00000c0" +
-			"p0p0p0p0p" +
-			"000000000" +
-			"000000000" +
-			"P0P0P0P0P" +
-			"0C00000C0" +
-			"000000000" +
-			"RHEAKAEHR";
-
-		this.board = str;
-	}
-
 	private _createPieces(): JSX.Element[] {
 		if (this._bg === null) return [];
 
@@ -123,14 +111,14 @@ export default class Board extends BoardBase<IBoardProps, IBoardState> {
 
 		for (let i = 0; i < this.state.board.length; i++) {
 			let char = this.state.board[i];
-			if (char == PieceType.Empty) continue;
+			if (char === PieceType.Empty) continue;
 
 			let type: PieceType = char.toLowerCase() as PieceType;
 			let isRed = char === char.toUpperCase();
 
 			let col = i % BoardConst.BOARD_COL;
 			let row = Math.floor(i / BoardConst.BOARD_COL);
-			let x = this.state.horizontalPadding + col * this.state.cellWidth;
+			//let x = this.state.horizontalPadding + col * this.state.cellWidth;
 			let y = this.state.verticalPadding + row * this.state.cellHeight;
 
 			if (this.state.isFlipped) {
@@ -175,7 +163,6 @@ export default class Board extends BoardBase<IBoardProps, IBoardState> {
 
 			let oldIndex = piece.state.x + piece.state.y * BoardConst.BOARD_COL;
 			let newIndex = x + y * BoardConst.BOARD_COL;
-			let boardStr = 
 
 			this._board.setBoard(StringUtils.replaceCharAt(this._board.getBoard(), this._board.getBoard()[oldIndex], newIndex));
 			this._board.setBoard(StringUtils.replaceCharAt(this._board.getBoard(), PieceType.Empty, oldIndex));

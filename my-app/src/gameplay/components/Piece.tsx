@@ -1,8 +1,6 @@
 import * as React from "react";
 import ImagesCollection from "../../resources/ImagesCollection";
 import * as Sprites from "../../resources/pieces/Index";
-import EventHandler from "../../utils/EventHandler";
-import Draggable from "react-draggable";
 import { MathEx } from "../../utils/MathEx";
 import { PieceType } from "../common/Piece";
 
@@ -158,7 +156,7 @@ export default class Piece extends React.Component<IPieceProps, IPieceState> {
 	}
 
 	private _initCanvas(canvas: HTMLCanvasElement | null) {
-		if (canvas == null || this._canvas == canvas) return;
+		if (canvas == null || this._canvas === canvas) return;
 
 		this._canvas = canvas;
 		let context = canvas.getContext("2d");

@@ -1,5 +1,3 @@
-import * as React from "react";
-import fs from "fs";
 import { staticImplements, IStaticInit } from "../interfaces/StaticInit";
 import { getAllPaths as getAllPiecePaths } from "./pieces/Index";
 

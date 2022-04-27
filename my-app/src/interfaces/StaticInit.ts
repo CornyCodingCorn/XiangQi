@@ -3,5 +3,5 @@ export interface IStaticInit<Prop, Return> {
 }
 
 export function staticImplements<Interface>() {
-    return <U extends Interface>(constructor: U) => {constructor};
+    return <U extends Interface>(constructor: U) => constructor;
 }

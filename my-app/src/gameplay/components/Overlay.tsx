@@ -2,7 +2,7 @@ import * as React from "react";
 import Vector2 from "../../utils/Vector2";
 import { BoardBase, BoardConst, IBoardBaseProps, IBoardBaseStates } from "./BoardBase";
 import Piece, { PieceType } from "./Piece";
-import PossibleMove, { IPossibleMoveProps } from "./PossibleMove";
+import PossibleMove from "./PossibleMove";
 import { Board as BoardLogic } from "../common/Board"
 
 const DELIMITER = "/";
@@ -96,7 +96,7 @@ export default class Overlay extends React.Component<
 		this._selectingPiece = piece;
 		// Calculate the move string
 		let possibleMoves = BoardLogic.generateMove(piece.state.type, piece.state.x, piece.state.y, piece.state.isRed);
-		if (possibleMoves == "") {
+		if (possibleMoves === "") {
 			return;
 		}
 

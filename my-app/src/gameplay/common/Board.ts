@@ -141,7 +141,7 @@ export class Board extends BoardInfo {
 		let ourKing: Piece = !isRed ? board.blackKing : board.redKing;
 
 		// Check if the king is seeing each other :))
-		if (ourKing.location.x == king.location.x) {
+		if (ourKing.location.x === king.location.x) {
 			let startIdx = Math.min(ourKing.location.y, king.location.y) + 1;
 			let endIdx = Math.max(ourKing.location.y, king.location.y) - 1;
 
@@ -161,7 +161,7 @@ export class Board extends BoardInfo {
 		for (let i = 0; i < enemies.length; i++) {
 			let value = enemies[i];
 			// If the enemy has the same x and y as the fill in piece then it mean that the enemy is going to be killed
-			if (value.location.x == fillX && value.location.y == fillY) continue;
+			if (value.location.x === fillX && value.location.y === fillY) continue;
 
 			let move: string = Board.generateRawMove(
 				value.type,

@@ -1,42 +1,27 @@
 import * as React from "react";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import ImagesCollection from "./resources/ImagesCollection";
 import "./App.css";
-import GamePlay from "./website/pages/gameplay";
+import { BrowserRouter, Route, Routes } from "react-router-dom";
+import Home from "./website/pages/Home";
+import SignIn from "./website/pages/SignIn";
+import SignUp from "./website/pages/SignUp";
 
 export interface IAppProps {}
 
 export default function App(props: IAppProps) {
-  const [init, setInit] = useState(false);
-
   useEffect(() => {
-    ImagesCollection.init(() => {
-      setInit(true);
-    });
+    ImagesCollection.init();
   }, []);
 
-  return !init ? (
-    <div className="container vh-100 align-items-center d-flex">
-      <div className="row w-100">
-        <div className="col-md-4" />
-        <div className="col-md-4">
-          <div className="card">
-            <div className="card-body bg-dark">
-              <p className="card-title text-light fs-2 text-center fw-bolder">
-                Loading...
-              </p>
-              <p className="card-title text-light fs-6 text-center fw-bolder">
-                Please wait a few second.
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  ) : (
-    // If haven't init
-    <div>
-			<GamePlay/>
-		</div>
+  return (
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<Home />}>
+          <Route path="/sign-in" element={<SignIn />} />
+          <Route path="/sign-up" element={<SignUp />} />
+        </Route>
+      </Routes>
+    </BrowserRouter>
   );
 }
