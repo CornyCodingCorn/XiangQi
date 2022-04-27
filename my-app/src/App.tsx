@@ -1,85 +1,42 @@
-import "./App.css";
-import Piece, { PieceType } from "./gameplay/components/Piece";
-import ImagesCollection from "./resources/ImagesCollection";
 import * as React from "react";
-import Board from "./gameplay/components/Board";
-
-const BOARD_COLOR = 0xefcc8b;
-const PAD_COLOR = 0x724726;
-const OUTER_PAD_COLOR = 0x522706;
-const LINE_COLOR = 0x933a1b;
-const LINE_MARK_COLOR = 0x0077FF;
-const LINE_MARK_OVER_ENEMY_COLOR = 0x55DD55;
-const LINE_THICKNESS = 4;
-const PADDING = 46;
-const PIECE_SIZE = 64;
-const CELL_SIZE = 70;
+import { useEffect, useState } from "react";
+import ImagesCollection from "./resources/ImagesCollection";
+import "./App.css";
+import GamePlay from "./website/pages/gameplay";
 
 export interface IAppProps {}
 
-export interface IAppState {}
+export default function App(props: IAppProps) {
+  const [init, setInit] = useState(false);
 
-export default class App extends React.Component<IAppProps> {
-	private _isLoaded: boolean = false;
-	public get isLoaded(): boolean {
-		return this._isLoaded;
-	}
+  useEffect(() => {
+    ImagesCollection.init(() => {
+      setInit(true);
+    });
+  }, []);
 
-	componentDidMount() {
-		ImagesCollection.init(() => {
-			this._isLoaded = true;
-			this.forceUpdate();
-		});
-	}
-
-	public render() {
-		let component: JSX.Element;
-		if (this._isLoaded) {
-			component = (
-				<div>
-					<Board
-						moveCircleRadius={2}
-						moveString=""
-						moveLineWidth={LINE_THICKNESS}
-
-						moveLineColor={LINE_MARK_COLOR}
-						moveLineOverEnemyColor={LINE_MARK_OVER_ENEMY_COLOR}
-
-						moveLineAlpha={1}
-						moveLineLength={6}
-						moveVisible={false}
-						
-						moveWidth={PIECE_SIZE}
-						moveHeight={PIECE_SIZE}
-
-						moveSpace={14}
-
-						isFlipped={false}
-						lineThickness={LINE_THICKNESS}
-						lineOpacity={0.8}
-						boardColor={BOARD_COLOR}
-						padColor={PAD_COLOR}
-						outerPadColor={OUTER_PAD_COLOR}
-						outerPadPercentage={0.15}
-						lineColor={LINE_COLOR}
-						horizontalPadding={PADDING}
-						verticalPadding={PADDING}
-						pieceSize={PIECE_SIZE}
-						cellWidth={CELL_SIZE}
-						cellHeight={CELL_SIZE}
-					/>
-				</div>
-			);
-		} else {
-			let style: React.CSSProperties = {
-				backgroundColor: "red",
-				width: 200,
-				height: 200,
-			};
-
-			component = <div style={style}></div>;
-		}
-
-		return component;
-	}
+  return !init ? (
+    <div className="container vh-100 align-items-center d-flex">
+      <div className="row w-100">
+        <div className="col-md-4" />
+        <div className="col-md-4">
+          <div className="card">
+            <div className="card-body bg-dark">
+              <p className="card-title text-light fs-2 text-center fw-bolder">
+                Loading...
+              </p>
+              <p className="card-title text-light fs-6 text-center fw-bolder">
+                Please wait a few second.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  ) : (
+    // If haven't init
+    <div>
+			<GamePlay/>
+		</div>
+  );
 }
