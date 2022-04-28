@@ -2,14 +2,23 @@ import * as React from "react";
 import { Link, Outlet } from "react-router-dom";
 import AuthenticatedTopBar from "../components/AuthenticatedTopBar";
 import TopBar from "../components/TopBar";
-import Authentication from "../services/Authentication";
+import AuthenticationService from "../services/AuthenticationService";
 
 export interface IHomeProps {}
 
 export default function Home(props: IHomeProps) {
+  const [isAuthenticated, setIsAuthenticated] = React.useState(false);
+
+  AuthenticationService.RefreshToken((result) => {
+    setIsAuthenticated(result);
+  });
+
+  AuthenticationService.loginEventHandler.addCallback(() => setIsAuthenticated(true));
+  AuthenticationService.logoutEventHandler.addCallback(() => setIsAuthenticated(true));
+
   return (
-    <div className="vw-100 vh-100">
-      <div className="navbar navbar-expand-lg bg-dark text-white">
+    <div className="d-flex flex-column w-100 h-100">
+      <div className="navbar navbar-expand-lg bg-dark text-white shadow-lg">
         <div className="container">
           <div className="navbar-brand d-flex">
             <svg version="1.1" x="0px" y="0px" width={45} viewBox="0 0 220 220">
@@ -28,14 +37,14 @@ export default function Home(props: IHomeProps) {
             </Link>
           </div>
 
-          {Authentication.isAuthenticated ? (
+          {isAuthenticated ? (
             <AuthenticatedTopBar />
           ) : (
             <TopBar />
           )}
         </div>
       </div>
-      <div className="h-100">
+      <div className="flex-grow-1">
         <Outlet />
       </div>
     </div>

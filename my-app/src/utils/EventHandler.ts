@@ -1,4 +1,4 @@
-export default class EventHander<TParam> {
+export default class EventHandler<TParam> {
     private _callbacks: ((arg0: TParam) => void)[] = [];
 
     public addCallback(callback: (args: TParam) => void) {
