@@ -1,6 +1,3 @@
-import { Location } from "react-router-dom";
-import { URLSearchParams } from "url";
-
 export class SearchParam {
   private urlParams: URLSearchParams;
 
@@ -9,7 +6,8 @@ export class SearchParam {
   }
 
   public getBool(key: string) {
-    return this.urlParams.get(key) === "true";
+    let value = this.urlParams.get(key);
+    return value === "true";
   }
 
   public getInt(key: string) {

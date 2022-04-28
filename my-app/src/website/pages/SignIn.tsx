@@ -14,12 +14,18 @@ export default function SignIn(props: ISignInProps) {
       style={{ backgroundImage: `url(${background})`, backgroundSize: "cover" }}
     >
       <div className="form-wrapper row w-100 justify-content-center">
-        <SignUpForm buttonText="Sign in" linkText="Haven't sign up?" isSignIn={true} linkUrl={"/sign-up"} onRender={c => info = c} onSubmit={() => login(info)}/>
+        <SignUpForm
+          tittle={"Sign in"}
+          buttonText="Sign in"
+          linkText="Haven't sign up?"
+          isSignIn={true}
+          linkUrl={"/sign-up"}
+          onRender={(c) => (info = c)}
+          onSubmit={() => login(info)}
+        />
       </div>
     </div>
   );
 }
 
-function login(info: SignUpInfo) {
-
-}
+function login(info: SignUpInfo) {}
