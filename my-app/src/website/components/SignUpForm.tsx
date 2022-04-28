@@ -65,8 +65,8 @@ export default function SignUpForm(props: ISignUpFormProps) {
 
   return (
     <form className="signUpForm ms-4 col-xl-6 col-lg-8 col-10 align-self-center">
-      <div className="card card-body rounded-3 shadow">
-        <span className="fw-bold text-center fs-4 mb-4 text-uppercase">{props.tittle}</span>
+      <div className="card card-rounded card-body shadow px-5 py-5">
+        <span className="fw-bold text-center fs-3 mb-5 text-uppercase">{props.tittle}</span>
         <div className="row mb-3">
           <label className="col-md-2 col-form-label fw-bold text-nowrap">
             Username

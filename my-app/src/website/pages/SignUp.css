@@ -1,4 +1,8 @@
 .form-wrapper {
   max-height: 80vh;
-  min-height: 400px;
+  min-height: 550px;
+}
+
+.background-wrapper {
+  min-height: 550px;
 }

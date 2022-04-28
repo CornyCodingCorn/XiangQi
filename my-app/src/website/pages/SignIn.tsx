@@ -10,7 +10,7 @@ export default function SignIn(props: ISignInProps) {
 
   return (
     <div
-      className="d-flex align-content-center h-100"
+      className="d-flex background-wrapper align-content-center h-100"
       style={{ backgroundImage: `url(${background})`, backgroundSize: "cover" }}
     >
       <div className="form-wrapper row w-100 justify-content-center">

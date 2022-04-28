@@ -44,7 +44,7 @@ export default function Home(props: IHomeProps) {
           )}
         </div>
       </div>
-      <div className="flex-grow-1">
+      <div className="flex-grow-1 overflow-auto">
         <Outlet />
       </div>
     </div>

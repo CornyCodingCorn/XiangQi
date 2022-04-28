@@ -1,3 +1,7 @@
 .signUpForm {
-  max-width: 650px;
+  max-width: 750px;
+}
+
+.card-rounded {
+  border-radius: 15px;
 }
