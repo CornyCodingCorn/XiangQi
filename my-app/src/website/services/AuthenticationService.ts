@@ -1,43 +1,79 @@
 import { AxiosError } from "axios";
 import urlJoin from "url-join";
 import EventHandler from "../../utils/EventHandler";
-import { AppAxios } from "../configurations/axiosConfig";
+import { Log } from "../../utils/Log";
+import {
+  AppAxios,
+  AppAxiosConfig,
+  AppAxiosHeaders,
+} from "../configurations/axiosConfig";
 import { SERVER_URL } from "../configurations/serverUrl";
 import PlayerDto from "../dto/PlayerDto";
 import ResponseObject from "../dto/ResponseObject";
+import cookieClient from 'react-cookie';
 
 const AUTH_URL = urlJoin(SERVER_URL, "/api/auth");
 const LOGIN_URL = urlJoin(AUTH_URL, "/login");
+const LOGOUT_URL = urlJoin(AUTH_URL, "/logout");
 const REGISTER_URL = urlJoin(AUTH_URL, "/register");
 const REFRESH_URL = urlJoin(AUTH_URL, "/refresh");
 
 export default class AuthenticationService {
   private static _isAuthenticated = false;
+  private static _jwt = "";
+  private static _playerInfo: PlayerDto | null;
+  private static _refreshIntervalID = -1;
+
   public static get isAuthenticated() {
     return this._isAuthenticated;
   }
-
-  private static _jwt = "";
   public static get jwt() {
     return this._jwt;
   }
+  public static get playerInfo() {
+    return this._playerInfo;
+  }
 
-  public static readonly loginEventHandler: EventHandler<
-    PlayerDto
-  > = new EventHandler();
-  public static readonly logoutEventHandler: EventHandler<
-    undefined
-  > = new EventHandler();
-  public static readonly registerEventHandler: EventHandler<
-    PlayerDto
-  > = new EventHandler();
+  public static readonly onRefresh: EventHandler<string> = new EventHandler();
+  public static readonly onRefreshFailed: EventHandler<AxiosError> = new EventHandler();
+  public static readonly onLogout: EventHandler<undefined> = new EventHandler();
+  public static readonly onLogin: EventHandler<PlayerDto> = new EventHandler();
 
-  public static Login() {
-    window.setInterval(() => this.RefreshToken(undefined), 250000);
+  public static Login(
+    username: String,
+    password: String,
+    callback: (
+      err: AxiosError<ResponseObject<null>> | null,
+      data: ResponseObject<PlayerDto> | null
+    ) => void
+  ) {
+    AppAxios.post(LOGIN_URL, { username: username, password: password })
+      .then((res) => {
+        let resObj: ResponseObject<PlayerDto> = res.data;
+        let jwt = res.headers[AppAxiosHeaders.JWT];
+
+        this.setLoginInfo(resObj.data, jwt);
+        this.startRefreshInterval();
+        
+        //const [cookies, setCookie, removeCookie] = cookieClient.useCookies(['cookie-name']);
+        //setCookie(AppAxiosConfig.jwtCookie, )
+
+        this.onLogin.invoke(resObj.data);
+        callback(null, resObj);
+      })
+      .catch((err) => {
+        callback(err, null);
+      });
   }
 
   public static Logout() {
-    this.logoutEventHandler.invoke(undefined);
+    AppAxios.put(LOGOUT_URL)
+    .then(() => {
+      this.cancelRefreshInterval();
+      this.clearLoginInfo();
+      this.onLogout.invoke(undefined);
+    })
+    .catch();
   }
 
   public static Register(
@@ -59,12 +95,58 @@ export default class AuthenticationService {
   }
 
   public static RefreshToken(
-    callback: ((result: boolean) => void) | undefined
-  ) {}
+    callback: ((err: AxiosError | undefined, jwt: string | undefined) => void) | undefined
+  ) {
+    AppAxios.put(REFRESH_URL)
+    .then((res) => {
+      let jwt = res.headers[AppAxiosHeaders.JWT];
+      Log.log("refresh", "Refresh token changed to " + jwt);
 
-  public static ConstructRequestHeader() {
-    return {
-      bearer: this.jwt,
-    };
+      if (callback)
+        callback(undefined, jwt);
+    })
+    .catch((err) => {
+      Log.error("refresh", "Refresh failed");
+      if (callback)
+        callback(err, undefined);
+    })
+  }
+
+  private static setLoginInfo(info: PlayerDto, jwt: string) {
+    this._playerInfo = info;
+    this._jwt = jwt;
+    this._isAuthenticated = true;
+
+    AppAxiosConfig.jwt = jwt;
+  }
+
+  private static clearLoginInfo() {
+    this._playerInfo = null;
+    this._jwt = "";
+    this._isAuthenticated = false;
+
+    AppAxiosConfig.jwt = "";
+  }
+
+  private static startRefreshInterval() {
+    this._refreshIntervalID = window.setInterval(
+      () => this.RefreshToken((err, jwt) => {
+        if (err) {
+          this.cancelRefreshInterval();
+          this.clearLoginInfo();
+
+          this.onRefreshFailed.invoke(err);
+        }
+
+        // update jwt
+        this._jwt = AppAxiosConfig.jwt = jwt!;        
+      }),
+      AppAxiosConfig.jwtRefreshInterval
+    );
+  }
+  private static cancelRefreshInterval() {
+    if (this._refreshIntervalID < 0) return;
+    window.clearInterval(this._refreshIntervalID);
+    this._refreshIntervalID = -1;
   }
 }

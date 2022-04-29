@@ -1,16 +1,30 @@
-import axios, { AxiosError } from "axios";
+import axios, { AxiosError, AxiosResponseHeaders } from "axios";
 import { Log } from "../../utils/Log";
 import ResponseObject from "../dto/ResponseObject";
 
-export const AppAxios = axios.create();
+export enum AppAxiosHeaders {
+  JWT = "authorization"
+}
+
+export const AppAxios = axios.create({
+  withCredentials: true
+});
+
 export const AppAxiosConfig = {
   logError: true,
   logResponse: false,
   logRequest: false,
+  jwtRefreshInterval: 10000,
+  jwt: "",
+  jwtCookie: "xiangqi",
 }
 
 AppAxios.interceptors.request.use(function (config) {
-  // Do something before request is sent
+  config.headers = {
+    ...config.headers,
+    [AppAxiosHeaders.JWT]: AppAxiosConfig.jwt
+  }
+
   return config;
 }, function (error) {
   if (AppAxiosConfig.logError) {
@@ -21,7 +35,6 @@ AppAxios.interceptors.request.use(function (config) {
 });
 
 AppAxios.interceptors.response.use(function (response) {
-
   return response;
 }, function (error: AxiosError<ResponseObject<null>>) {
   if (AppAxiosConfig.logError) {

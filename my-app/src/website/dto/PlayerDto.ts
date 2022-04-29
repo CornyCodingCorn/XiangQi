@@ -1,7 +1,7 @@
 export default class PlayerDto {
   public constructor(
-    private readonly id: string,
-    private readonly username: string,
-    private readonly email: string
+    public readonly id: string,
+    public readonly username: string,
+    public readonly email: string
   ) {}
 }

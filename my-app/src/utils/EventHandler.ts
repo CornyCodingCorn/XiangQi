@@ -3,7 +3,7 @@ export default class EventHandler<TParam> {
 
     public addCallback(callback: (args: TParam) => void) {
         let index = this._callbacks.indexOf(callback);
-        if (index < 0)
+        if (index >= 0)
             return;
 
         this._callbacks.push(callback);

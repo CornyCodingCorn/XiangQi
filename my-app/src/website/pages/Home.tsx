@@ -9,12 +9,12 @@ export interface IHomeProps {}
 export default function Home(props: IHomeProps) {
   const [isAuthenticated, setIsAuthenticated] = React.useState(false);
 
-  AuthenticationService.RefreshToken((result) => {
-    setIsAuthenticated(result);
-  });
+  let setAuthTrueClb = () => setIsAuthenticated(true);
+  let setAuthFalseClb = () => setIsAuthenticated(false);
 
-  AuthenticationService.loginEventHandler.addCallback(() => setIsAuthenticated(true));
-  AuthenticationService.logoutEventHandler.addCallback(() => setIsAuthenticated(true));
+  AuthenticationService.onRefreshFailed.addCallback(setAuthTrueClb)
+  AuthenticationService.onLogout.addCallback(setAuthFalseClb);
+  AuthenticationService.onLogin.addCallback(setAuthTrueClb);
 
   return (
     <div className="d-flex flex-column w-100 h-100">

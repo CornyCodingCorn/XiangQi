@@ -2,10 +2,13 @@ import * as React from "react";
 import "./SignUp.css";
 import SignUpForm, { SignUpInfo } from "../components/SignUpForm";
 import background from "../../resources/backgrounds/chessBackground.bmp";
+import AuthenticationService from "../services/AuthenticationService";
+import { NavigateFunction, useNavigate } from "react-router-dom";
 
 export interface ISignInProps {}
 
 export default function SignIn(props: ISignInProps) {
+  let navigate = useNavigate();
   let info: SignUpInfo;
 
   return (
@@ -21,11 +24,17 @@ export default function SignIn(props: ISignInProps) {
           isSignIn={true}
           linkUrl={"/sign-up"}
           onRender={(c) => (info = c)}
-          onSubmit={() => login(info)}
+          onSubmit={() => login(info, navigate)}
         />
       </div>
     </div>
   );
 }
 
-function login(info: SignUpInfo) {}
+function login(info: SignUpInfo, nav: NavigateFunction) {
+  AuthenticationService.Login(info.username, info.password, function(err, data) {
+    if (err) return;
+
+    nav("/");
+  });
+}
