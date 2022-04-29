@@ -1,9 +1,10 @@
 import * as React from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Link, NavigateFunction, useLocation, useNavigate } from "react-router-dom";
 import "./SignUp.css";
 import background from "../../resources/backgrounds/chessBackground.bmp";
 import { SearchParam } from "../configurations/searchParam";
 import SignUpForm, { SignUpInfo } from "../components/SignUpForm";
+import AuthenticationService from "../services/AuthenticationService";
 
 export interface ISignUpProps {}
 
@@ -17,7 +18,9 @@ export default function SignUp(props: ISignUpProps) {
   React.useEffect(() => {
     const searchParam = new SearchParam(location.search);
     setSuccessful(searchParam.successful);
-  }, [location])
+  }, [location]);
+
+
 
 
   return (
@@ -43,7 +46,7 @@ export default function SignUp(props: ISignUpProps) {
             isSignIn={false}
             linkUrl={"/sign-in"}
             onRender={(c) => (info = c)}
-            onSubmit={() => register(info)}
+            onSubmit={() => register(info, navigate)}
           />
         )}
       </div>
@@ -51,7 +54,15 @@ export default function SignUp(props: ISignUpProps) {
   );
 }
 
-function register(info: SignUpInfo) {
-  console.log(info.username);
-  // Check if password is correct
+function register(info: SignUpInfo, nav: NavigateFunction) {
+  AuthenticationService.Register(info.username, info.email, info.password, (err) => {
+    if (err) {
+      return;
+    }
+
+    let searchParam: SearchParam = new SearchParam();
+    searchParam.successful = true;
+
+    nav("/sign-up?" + searchParam.toString());
+  })
 }
