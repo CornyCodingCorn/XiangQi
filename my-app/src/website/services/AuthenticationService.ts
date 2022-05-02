@@ -10,7 +10,6 @@ import {
 import { SERVER_URL } from "../configurations/serverUrl";
 import PlayerDto from "../dto/PlayerDto";
 import ResponseObject from "../dto/ResponseObject";
-import cookieClient from 'react-cookie';
 
 const AUTH_URL = urlJoin(SERVER_URL, "/api/auth");
 const LOGIN_URL = urlJoin(AUTH_URL, "/login");
@@ -46,6 +45,8 @@ export default class AuthenticationService {
 
       this.RefreshToken((err, jwt) => {
         if (err || !jwt) return;
+
+        AppAxiosConfig.jwt = jwt;
 
         AppAxios.get(AUTH_URL)
         .then((res) => {

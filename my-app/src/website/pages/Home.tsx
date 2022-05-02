@@ -18,7 +18,7 @@ export default function Home(props: IHomeProps) {
 
   return (
     <div className="d-flex flex-column w-100 h-100">
-      <div className="navbar navbar-expand-lg bg-dark text-white shadow-lg">
+      <div className="navbar navbar-expand-lg bg-dark text-white">
         <div className="container">
           <div className="navbar-brand d-flex">
             <svg version="1.1" x="0px" y="0px" width={45} viewBox="0 0 220 220">

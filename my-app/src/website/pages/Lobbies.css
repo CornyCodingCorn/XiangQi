@@ -1,0 +1,15 @@
+.lobbiesTable {
+  display: block;
+  height: 600px;
+  width: 400px;
+  overflow: auto;
+  transform: translate(0, -15px);
+}
+
+.lobbiesWidth {
+  width: 450px;
+}
+
+.lobbiesListDiv {
+  min-width: 450px;
+}

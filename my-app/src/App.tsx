@@ -7,6 +7,7 @@ import Home from "./website/pages/Home";
 import SignIn from "./website/pages/SignIn";
 import SignUp from "./website/pages/SignUp";
 import AuthenticationService from "./website/services/AuthenticationService";
+import Lobbies from "./website/pages/Lobbies";
 
 export interface IAppProps {}
 
@@ -22,6 +23,7 @@ export default function App(props: IAppProps) {
         <Route path="/" element={<Home />}>
           <Route path="/sign-in" element={<SignIn />} />
           <Route path="/sign-up" element={<SignUp />} />
+          <Route path="/lobbies" element={<Lobbies/> } />
         </Route>
       </Routes>
     </BrowserRouter>
