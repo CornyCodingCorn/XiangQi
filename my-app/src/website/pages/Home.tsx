@@ -7,7 +7,7 @@ import AuthenticationService from "../services/AuthenticationService";
 export interface IHomeProps {}
 
 export default function Home(props: IHomeProps) {
-  const [isAuthenticated, setIsAuthenticated] = React.useState(false);
+  const [isAuthenticated, setIsAuthenticated] = React.useState(AuthenticationService.isAuthenticated);
 
   let setAuthTrueClb = () => setIsAuthenticated(true);
   let setAuthFalseClb = () => setIsAuthenticated(false);

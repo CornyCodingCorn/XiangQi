@@ -14,7 +14,7 @@ export const AppAxiosConfig = {
   logError: true,
   logResponse: false,
   logRequest: false,
-  jwtRefreshInterval: 10000,
+  jwtRefreshInterval: 600000,
   jwt: "",
   jwtCookie: "xiangqi",
 }

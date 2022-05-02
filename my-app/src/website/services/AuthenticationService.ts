@@ -39,6 +39,27 @@ export default class AuthenticationService {
   public static readonly onLogout: EventHandler<undefined> = new EventHandler();
   public static readonly onLogin: EventHandler<PlayerDto> = new EventHandler();
 
+  public static Init() {
+    let cachedJwt = localStorage[AppAxiosHeaders.JWT];
+    if (cachedJwt) {
+      AppAxiosConfig.jwt = cachedJwt;
+
+      this.RefreshToken((err, jwt) => {
+        if (err || !jwt) return;
+
+        AppAxios.get(AUTH_URL)
+        .then((res) => {
+          let resObj: ResponseObject<PlayerDto> = res.data;
+
+          this.setLoginInfo(resObj.data, jwt);
+          this.startRefreshInterval();
+
+          this.onLogin.invoke(resObj.data);
+        })
+      })
+    }
+  }
+
   public static Login(
     username: String,
     password: String,
@@ -73,7 +94,9 @@ export default class AuthenticationService {
       this.clearLoginInfo();
       this.onLogout.invoke(undefined);
     })
-    .catch();
+    .catch(() => {
+
+    });
   }
 
   public static Register(
@@ -114,18 +137,14 @@ export default class AuthenticationService {
 
   private static setLoginInfo(info: PlayerDto, jwt: string) {
     this._playerInfo = info;
-    this._jwt = jwt;
+    localStorage[AppAxiosHeaders.JWT] = this._jwt = AppAxiosConfig.jwt = jwt;
     this._isAuthenticated = true;
-
-    AppAxiosConfig.jwt = jwt;
   }
 
   private static clearLoginInfo() {
     this._playerInfo = null;
-    this._jwt = "";
+    localStorage[AppAxiosHeaders.JWT] = this._jwt = AppAxiosConfig.jwt = "";
     this._isAuthenticated = false;
-
-    AppAxiosConfig.jwt = "";
   }
 
   private static startRefreshInterval() {

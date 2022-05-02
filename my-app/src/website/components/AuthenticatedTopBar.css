@@ -1,0 +1,14 @@
+.tabLink {
+  text-decoration: none;
+  color: white;
+  font-weight: bold;
+  margin-left: 10px;
+  margin-right: 10px;
+}
+
+.listItem {
+}
+
+.tabLink:hover {
+  color: #0d6efd
+}
