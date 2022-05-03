@@ -20,9 +20,6 @@ export default function SignUp(props: ISignUpProps) {
     setSuccessful(searchParam.successful);
   }, [location]);
 
-
-
-
   return (
     <div
       className="d-flex background-wrapper align-content-center h-100"

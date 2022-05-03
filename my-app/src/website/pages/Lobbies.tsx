@@ -6,17 +6,23 @@ import "./Lobbies.css";
 export interface ILobbiesProps {}
 
 export default function Lobbies(props: ILobbiesProps) {
-  const [counter, setCounter] = React.useState(0);
+  const [lobbies, setLobbies] = React.useState<LobbyDto[]>([]);
 
-  LobbiesService.onLobbiesUpdated.addCallback(() => {
-    setCounter(counter + 1);
-  })
+  // Store it for cleaning up
+  let updateLobbies = (lobbies: LobbyDto[]) => {
+    setLobbies([...lobbies]);
+  }
 
+  // Add and remove listener on mount and dismount
   React.useEffect(() => {
-    LobbiesService.GetAllLobby();
-  }, [])
+    LobbiesService.onLobbiesUpdated.addCallback(updateLobbies);
 
-  let rows = CreateLobbiesElements();
+    return () => {
+      LobbiesService.onLobbiesUpdated.removeCallback(updateLobbies);
+    }
+  }, []);
+
+  let rows = CreateLobbiesElements(lobbies);
 
   return (
     <div className="container h-100">
@@ -51,7 +57,7 @@ export default function Lobbies(props: ILobbiesProps) {
             <button key={"create-lobby"} className="btn btn-primary w-100 mb-2 mt-4 fw-bold" onClick={CreateNewLobby}>
               Create new lobby
             </button>
-            <button key={"join-lobby"} className="btn btn-primary w-100 fw-bold" onClick={JoinLobbyWithId}>
+            <button key={"join-lobby"} className="btn btn-primary w-100 fw-bold">
               Join with id
             </button>
           </div>
@@ -65,13 +71,12 @@ function CreateNewLobby() {
   LobbiesService.CreateLobby();
 }
 
-function JoinLobbyWithId() {
+function JoinLobbyWithId(id: String) {
 
 }
 
-function CreateLobbiesElements() {
+function CreateLobbiesElements(lobbies: LobbyDto[]) {
   let rows = [];
-  let lobbies = LobbiesService.lobbies;
 
   for (let i = 0; i < lobbies.length; i++) {
     let lobby = lobbies[i]
@@ -83,7 +88,7 @@ function CreateLobbiesElements() {
         </th>
         <td className="col-4">{lobby.player1}</td>
         <td className="col-6">
-          <button className="btn btn-primary me-3 fw-bold">Join</button>
+          <button className="btn btn-primary me-3 fw-bold" onClick={() => JoinLobbyWithId(lobby.id)}>Join</button>
           <button className="btn btn-info  fw-bold">Info</button>
         </td>
       </tr>

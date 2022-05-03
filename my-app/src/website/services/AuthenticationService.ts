@@ -10,6 +10,7 @@ import {
 import { SERVER_URL } from "../configurations/serverUrl";
 import PlayerDto from "../dto/PlayerDto";
 import ResponseObject from "../dto/ResponseObject";
+import { LobbiesService } from "./LobbiesService";
 
 const AUTH_URL = urlJoin(SERVER_URL, "/api/auth");
 const LOGIN_URL = urlJoin(AUTH_URL, "/login");
@@ -34,7 +35,9 @@ export default class AuthenticationService {
   }
 
   public static readonly onRefresh: EventHandler<string> = new EventHandler();
-  public static readonly onRefreshFailed: EventHandler<AxiosError> = new EventHandler();
+  public static readonly onRefreshFailed: EventHandler<
+    AxiosError
+  > = new EventHandler();
   public static readonly onLogout: EventHandler<undefined> = new EventHandler();
   public static readonly onLogin: EventHandler<PlayerDto> = new EventHandler();
 
@@ -48,16 +51,15 @@ export default class AuthenticationService {
 
         AppAxiosConfig.jwt = jwt;
 
-        AppAxios.get(AUTH_URL)
-        .then((res) => {
+        AppAxios.get(AUTH_URL).then((res) => {
           let resObj: ResponseObject<PlayerDto> = res.data;
 
           this.setLoginInfo(resObj.data, jwt);
           this.startRefreshInterval();
 
           this.onLogin.invoke(resObj.data);
-        })
-      })
+        });
+      });
     }
   }
 
@@ -76,10 +78,11 @@ export default class AuthenticationService {
 
         this.setLoginInfo(resObj.data, jwt);
         this.startRefreshInterval();
-        
+
         //const [cookies, setCookie, removeCookie] = cookieClient.useCookies(['cookie-name']);
         //setCookie(AppAxiosConfig.jwtCookie, )
 
+        // If login successful then we want to get all the current lobbies
         this.onLogin.invoke(resObj.data);
         callback(null, resObj);
       })
@@ -90,14 +93,12 @@ export default class AuthenticationService {
 
   public static Logout() {
     AppAxios.put(LOGOUT_URL)
-    .then(() => {
-      this.cancelRefreshInterval();
-      this.clearLoginInfo();
-      this.onLogout.invoke(undefined);
-    })
-    .catch(() => {
-
-    });
+      .then(() => {
+        this.cancelRefreshInterval();
+        this.clearLoginInfo();
+        this.onLogout.invoke(undefined);
+      })
+      .catch(() => {});
   }
 
   public static Register(
@@ -119,21 +120,25 @@ export default class AuthenticationService {
   }
 
   public static RefreshToken(
-    callback: ((err: AxiosError | undefined, jwt: string | undefined) => void) | undefined
+    callback:
+      | ((err: AxiosError | undefined, jwt: string | undefined) => void)
+      | undefined
   ) {
     AppAxios.put(REFRESH_URL)
-    .then((res) => {
-      let jwt = res.headers[AppAxiosHeaders.JWT];
-      Log.log("refresh", "Refresh token changed to " + jwt);
+      .then((res) => {
+        let jwt = res.headers[AppAxiosHeaders.JWT];
+        Log.log("refresh", "Refresh token changed to " + jwt);
 
-      if (callback)
-        callback(undefined, jwt);
-    })
-    .catch((err) => {
-      Log.error("refresh", "Refresh failed");
-      if (callback)
-        callback(err, undefined);
-    })
+        if (callback) callback(undefined, jwt);
+
+        this.onRefresh.invoke(jwt);
+      })
+      .catch((err) => {
+        Log.error("refresh", "Refresh failed");
+        if (callback) callback(err, undefined);
+
+        this.onRefreshFailed.invoke(err);
+      });
   }
 
   private static setLoginInfo(info: PlayerDto, jwt: string) {
@@ -150,17 +155,16 @@ export default class AuthenticationService {
 
   private static startRefreshInterval() {
     this._refreshIntervalID = window.setInterval(
-      () => this.RefreshToken((err, jwt) => {
-        if (err) {
-          this.cancelRefreshInterval();
-          this.clearLoginInfo();
+      () =>
+        this.RefreshToken((err, jwt) => {
+          if (err) {
+            this.cancelRefreshInterval();
+            this.clearLoginInfo();
+          }
 
-          this.onRefreshFailed.invoke(err);
-        }
-
-        // update jwt
-        this._jwt = AppAxiosConfig.jwt = jwt!;        
-      }),
+          // update jwt
+          this._jwt = AppAxiosConfig.jwt = jwt!;
+        }),
       AppAxiosConfig.jwtRefreshInterval
     );
   }
