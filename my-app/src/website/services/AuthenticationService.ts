@@ -43,11 +43,14 @@ export default class AuthenticationService {
 
   public static Init() {
     let cachedJwt = localStorage[AppAxiosHeaders.JWT];
-    if (cachedJwt) {
+    if (cachedJwt !== typeof undefined) {
       AppAxiosConfig.jwt = cachedJwt;
 
       this.RefreshToken((err, jwt) => {
-        if (err || !jwt) return;
+        if (err || !jwt) {
+          localStorage[AppAxiosHeaders.JWT] = undefined;
+          return;
+        }
 
         AppAxiosConfig.jwt = jwt;
 

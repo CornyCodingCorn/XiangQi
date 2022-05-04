@@ -16,6 +16,7 @@ export default function Lobbies(props: ILobbiesProps) {
   // Add and remove listener on mount and dismount
   React.useEffect(() => {
     LobbiesService.onLobbiesUpdated.addCallback(updateLobbies);
+    updateLobbies(LobbiesService.lobbies);
 
     return () => {
       LobbiesService.onLobbiesUpdated.removeCallback(updateLobbies);

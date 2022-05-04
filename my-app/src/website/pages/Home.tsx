@@ -12,7 +12,7 @@ export default function Home(props: IHomeProps) {
   let setAuthTrueClb = () => setIsAuthenticated(true);
   let setAuthFalseClb = () => setIsAuthenticated(false);
 
-  AuthenticationService.onRefreshFailed.addCallback(setAuthTrueClb)
+  AuthenticationService.onRefreshFailed.addCallback(setAuthFalseClb)
   AuthenticationService.onLogout.addCallback(setAuthFalseClb);
   AuthenticationService.onLogin.addCallback(setAuthTrueClb);
 
