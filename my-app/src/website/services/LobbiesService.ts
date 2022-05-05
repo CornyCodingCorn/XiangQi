@@ -1,19 +1,29 @@
+import { StompSubscription } from "@stomp/stompjs";
 import urlJoin from "url-join";
 import EventHandler from "../../utils/EventHandler";
 import { AppAxios } from "../configurations/axiosConfig";
 import { SERVER_URL, SERVER_WS_URL } from "../configurations/serverUrl";
 import { LobbiesMessage, LobbiesMessageType } from "../dto/LobbiesMessage";
 import { LobbyDto } from "../dto/LobbyDto";
+import { LobbyMessage, LobbyMessageType } from "../dto/LobbyMessage";
 import ResponseObject from "../dto/ResponseObject";
 import AuthenticationService from "./AuthenticationService";
+import { LobbyService } from "./LobbyService";
 import { WebSocketService } from "./WebsocketService";
 
-const LOBBIES_URL = urlJoin(SERVER_URL, "/api/v1/lobbies");
+export const LOBBIES_URL = urlJoin(SERVER_URL, "/api/v1/lobbies");
 
-const LOBBIES_WS_LOBBIES_BROKER = "/lobbies";
+export const LOBBIES_WS_LOBBIES_BROKER = "/lobbies";
 
-const LOBBIES_WS_LOBBY_MESSAGE = "/ws/lobbies";
-const LOBBIES_WS_LOBBY_MOVES = "/ws/lobbies/moves";
+export const LOBBIES_WS_LOBBY_MESSAGE = "/ws/lobbies";
+export const LOBBIES_WS_LOBBY_MOVES = "/ws/lobbies/moves";
+
+/**
+ * Join lobby: subscribe to lobby
+ * Quit lobby: unsubscribe
+ * Logout: no need
+ * 
+ */
 
 export class LobbiesService {
   private static _lobbies: LobbyDto[] = [];
@@ -22,7 +32,6 @@ export class LobbiesService {
   public static readonly onLobbiesUpdated: EventHandler<
     LobbyDto[]
   > = new EventHandler();
-  public static readonly onCurrentLobbyChanged: EventHandler<LobbyDto> = new EventHandler();
   public static get lobbies() {
     return this._lobbies;
   }
@@ -41,10 +50,9 @@ export class LobbiesService {
   }
 
   public static SubscribeToLobbies() {
+    // No need to store the subscription because this will only close when the user logout
     WebSocketService.stompClient!.subscribe(LOBBIES_WS_LOBBIES_BROKER, (message) => {
       let lobbiesMessage: LobbiesMessage = JSON.parse(message.body);
-      // Ignore our own message
-      if (lobbiesMessage.player === AuthenticationService.playerInfo!.username) return;
 
       if (lobbiesMessage.type === LobbiesMessageType.CREATE) {
         this._lobbies.push(lobbiesMessage.lobby);
@@ -61,10 +69,6 @@ export class LobbiesService {
       // Either way, invoke lobbies changed event
       this.onLobbiesUpdated.invoke(this._lobbies);
     })
-  }
-
-  public static UnsubscribeToLobbies() {
-
   }
 
   public static GetAllLobby(
@@ -93,20 +97,12 @@ export class LobbiesService {
         if (callback) {
           callback(undefined, resObj.data);
         }
-        this.onCurrentLobbyChanged.invoke(resObj.data);
+        LobbyService.SubscribeToLobby(this._currentLobby);
       })
       .catch((err) => {
         if (callback) {
           callback(err, undefined);
         }
       });
-  }
-
-  public static Ready(callback?: (err?: Error, lobby?: LobbyDto) => void) {
-
-  }
-
-  public static Join(callback?: (err?: Error, lobby?: LobbyDto) => void) {
-    
   }
 }

@@ -1,23 +1,37 @@
 import * as React from "react";
+import { useNavigate } from "react-router-dom";
+import { LobbyMessageType } from "../dto/LobbyMessage";
 import { LobbiesService } from "../services/LobbiesService";
+import { LobbyService } from "../services/LobbyService";
 
 export interface ILobbyProps {}
 
 export default function Lobby(props: ILobbyProps) {
-  const [player1Ready, setPlayer1Ready] = React.useState(false);
-  const [player2Ready, setPlayer2Ready] = React.useState(false);
-  let lobby = LobbiesService.currentLobby;
+  const [info, setInfo] = React.useState(LobbyService.lobbyInfo);
 
-  return lobby ? (
+  React.useEffect(() => { 
+    let clb = (type: LobbyMessageType) => {
+      setInfo(LobbyService.lobbyInfo);
+    }
+
+    LobbyService.onLobbyInfoChanged.addCallback(clb);
+    setInfo(LobbyService.lobbyInfo);
+
+    return () => {
+      LobbyService.onLobbyInfoChanged.removeCallback(clb);
+    }
+  }, [])
+
+  return info.player1 !== "" ? (
     <div className="container">
-      <div className="text-center fw-bold fs-3">Lobby {lobby.id}</div>
+      <div className="text-center fw-bold fs-3">Lobby {LobbyService.lobbyID}</div>
       <div>
-        <span>Player1: {lobby.player1} | </span>
-        <span>{player1Ready ? "Ready" : "Not ready"}</span>
+        <span>Player1: {info.player1} | </span>
+        <span>{info.player1Ready ? "Ready" : "Not ready"}</span>
       </div>
       <div>
-        <span>Player2: {lobby.player2 ? lobby.player2 : "empty"} | </span>
-        <span>{player2Ready ? "Ready" : "Not ready"}</span>
+        <span>Player2: {info.player2 ? info.player2 : "empty"} | </span>
+        <span>{info.player2Ready ? "Ready" : "Not ready"}</span>
       </div>
       <div>
         <button className="btn btn-primary fw-bold" onClick={Ready}>Ready</button>
@@ -27,5 +41,5 @@ export default function Lobby(props: ILobbyProps) {
 }
 
 function Ready() {
-  
+ LobbyService.Ready(); 
 }

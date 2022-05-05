@@ -54,7 +54,6 @@ export class WebSocketService {
     if (!this._stompClient) return;
 
     this._stompClient!.deactivate();
-
     this._stompClient = null;
   }
 
