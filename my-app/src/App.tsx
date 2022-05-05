@@ -10,6 +10,7 @@ import AuthenticationService from "./website/services/AuthenticationService";
 import Lobbies from "./website/pages/Lobbies";
 import { WebSocketService } from "./website/services/WebsocketService";
 import { LobbiesService } from "./website/services/LobbiesService";
+import Lobby from "./website/pages/Lobby";
 
 export interface IAppProps {}
 
@@ -31,6 +32,7 @@ export default function App(props: IAppProps) {
           <Route path="/sign-in" element={<SignIn />}/>
           <Route path="/sign-up" element={<SignUp />} />
           <Route path="/lobbies" element={<Lobbies/> } />
+          <Route path="/lobbies/:id" element={<Lobby /> } />
         </Route>
       </Routes>
     </BrowserRouter>

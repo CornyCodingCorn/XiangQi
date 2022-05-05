@@ -7,7 +7,7 @@ import { AppAxiosConfig, AppAxiosHeaders } from "../configurations/axiosConfig";
 import { SERVER_URL, SERVER_WS_URL } from "../configurations/serverUrl";
 import AuthenticationService from "./AuthenticationService";
 
-const LOBBIES_WS_ENDPOINT = urlJoin(SERVER_WS_URL, "/lobbies");
+const WS_ENDPOINT = urlJoin(SERVER_WS_URL, "ws");
 const WEBSOCKET_LOG = "Websocket";
 
 export class WebSocketService {
@@ -35,7 +35,7 @@ export class WebSocketService {
     }).toString();
 
     this._stompClient = new Client({
-      brokerURL: `${LOBBIES_WS_ENDPOINT}?${query}`,
+      brokerURL: `${WS_ENDPOINT}?${query}`,
       connectHeaders: {
         [AppAxiosHeaders.JWT]: AppAxiosConfig.jwt
       },
@@ -59,7 +59,7 @@ export class WebSocketService {
   }
 
   private static OnConnected: frameCallbackType = (receipt) => {
-    Log.log(WEBSOCKET_LOG, `Connected to ${LOBBIES_WS_ENDPOINT}`);
+    Log.log(WEBSOCKET_LOG, `Connected to ${WS_ENDPOINT}`);
     
     this._isConnected = true;
     this._retryCounter = 0;
@@ -67,7 +67,7 @@ export class WebSocketService {
   }
 
   private static OnDisconnected = (receipt: IFrame | undefined) => {
-    Log.log(WEBSOCKET_LOG, `Disconnected to ${LOBBIES_WS_ENDPOINT}`);
+    Log.log(WEBSOCKET_LOG, `Disconnected to ${WS_ENDPOINT}`);
     this._isConnected = false;
     this._retryCounter = 0;
     this.onDisconnect.invoke(undefined);

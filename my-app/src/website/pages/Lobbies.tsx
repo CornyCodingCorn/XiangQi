@@ -1,4 +1,5 @@
 import * as React from "react";
+import { NavigateFunction, useNavigate } from "react-router-dom";
 import { LobbyDto } from "../dto/LobbyDto";
 import { LobbiesService } from "../services/LobbiesService";
 import "./Lobbies.css";
@@ -7,6 +8,7 @@ export interface ILobbiesProps {}
 
 export default function Lobbies(props: ILobbiesProps) {
   const [lobbies, setLobbies] = React.useState<LobbyDto[]>([]);
+  const navigation = useNavigate();
 
   // Store it for cleaning up
   let updateLobbies = (lobbies: LobbyDto[]) => {
@@ -55,7 +57,7 @@ export default function Lobbies(props: ILobbiesProps) {
                 <tbody>{rows}</tbody>
               </table>
             </div>
-            <button key={"create-lobby"} className="btn btn-primary w-100 mb-2 mt-4 fw-bold" onClick={CreateNewLobby}>
+            <button key={"create-lobby"} className="btn btn-primary w-100 mb-2 mt-4 fw-bold" onClick={() => CreateNewLobby(navigation)}>
               Create new lobby
             </button>
             <button key={"join-lobby"} className="btn btn-primary w-100 fw-bold">
@@ -68,8 +70,14 @@ export default function Lobbies(props: ILobbiesProps) {
   );
 }
 
-function CreateNewLobby() {
-  LobbiesService.CreateLobby();
+function CreateNewLobby(navigation: NavigateFunction) {
+  LobbiesService.CreateLobby((err, lobby) => {
+    if (err) return;
+
+    navigation(lobby!.id, {
+      replace: false
+    })
+  });
 }
 
 function JoinLobbyWithId(id: String) {

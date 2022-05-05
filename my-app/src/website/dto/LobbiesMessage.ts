@@ -8,5 +8,6 @@ export enum LobbiesMessageType {
 export class LobbiesMessage {
   constructor(
     public readonly lobby: LobbyDto,
-    public readonly type: LobbiesMessageType) {}
+    public readonly type: LobbiesMessageType,
+    public readonly player: string) {}
 }

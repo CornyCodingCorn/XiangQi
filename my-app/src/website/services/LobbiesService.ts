@@ -17,12 +17,17 @@ const LOBBIES_WS_LOBBY_MOVES = "/ws/lobbies/moves";
 
 export class LobbiesService {
   private static _lobbies: LobbyDto[] = [];
+  private static _currentLobby: LobbyDto;
 
   public static readonly onLobbiesUpdated: EventHandler<
     LobbyDto[]
   > = new EventHandler();
+  public static readonly onCurrentLobbyChanged: EventHandler<LobbyDto> = new EventHandler();
   public static get lobbies() {
     return this._lobbies;
+  }
+  public static get currentLobby() {
+    return this._currentLobby;
   }
 
   public static Init() {
@@ -38,13 +43,15 @@ export class LobbiesService {
   public static SubscribeToLobbies() {
     WebSocketService.stompClient!.subscribe(LOBBIES_WS_LOBBIES_BROKER, (message) => {
       let lobbiesMessage: LobbiesMessage = JSON.parse(message.body);
+      // Ignore our own message
+      if (lobbiesMessage.player === AuthenticationService.playerInfo!.username) return;
 
-      if (lobbiesMessage.type == LobbiesMessageType.CREATE) {
+      if (lobbiesMessage.type === LobbiesMessageType.CREATE) {
         this._lobbies.push(lobbiesMessage.lobby);
-      } else if (lobbiesMessage.type == LobbiesMessageType.REMOVE) {
+      } else if (lobbiesMessage.type === LobbiesMessageType.REMOVE) {
         // Remove the lobby by id
         for (let i = 0; i < this._lobbies.length; i++) {
-          if (this._lobbies[i].id == lobbiesMessage.lobby.id) {
+          if (this._lobbies[i].id === lobbiesMessage.lobby.id) {
             this._lobbies.splice(i, 1);
             break;
           }
@@ -68,6 +75,7 @@ export class LobbiesService {
         let resObj: ResponseObject<LobbyDto[]> = res.data;
 
         this._lobbies = resObj.data;
+ 
         if (callback) callback(undefined, this._lobbies);
         LobbiesService.onLobbiesUpdated.invoke(resObj.data);
       })
@@ -76,9 +84,29 @@ export class LobbiesService {
       });
   }
 
-  public static CreateLobby() {
+  public static CreateLobby(callback?: (err?: Error, lobby?: LobbyDto) => void) {
     AppAxios.post(LOBBIES_URL)
-      .then((res) => {})
-      .catch((err) => {});
+      .then((res) => {
+        let resObj: ResponseObject<LobbyDto> = res.data;
+        this._currentLobby = resObj.data;
+
+        if (callback) {
+          callback(undefined, resObj.data);
+        }
+        this.onCurrentLobbyChanged.invoke(resObj.data);
+      })
+      .catch((err) => {
+        if (callback) {
+          callback(err, undefined);
+        }
+      });
+  }
+
+  public static Ready(callback?: (err?: Error, lobby?: LobbyDto) => void) {
+
+  }
+
+  public static Join(callback?: (err?: Error, lobby?: LobbyDto) => void) {
+    
   }
 }
