@@ -5,100 +5,110 @@ import EventHandler from "../../utils/EventHandler";
 import { Log } from "../../utils/Log";
 import { AppAxiosConfig, AppAxiosHeaders } from "../configurations/axiosConfig";
 import { SERVER_URL, SERVER_WS_URL } from "../configurations/serverUrl";
+import ResponseObject from "../dto/ResponseObject";
 import AuthenticationService from "./AuthenticationService";
 
 const WS_ENDPOINT = urlJoin(SERVER_WS_URL, "ws");
 const WEBSOCKET_LOG = "Websocket";
+const WS_USERS_ENDPOINT = "/users";
 
 export class WebSocketService {
   public static Init() {
-    AuthenticationService.onLogin.addCallback(this.UpdateHeader);
-    AuthenticationService.onLogin.addCallback(this.Connect);
+    AuthenticationService.onLogin.addCallback(WebSocketService.UpdateHeader);
+    AuthenticationService.onLogin.addCallback(WebSocketService.Connect);
     
-    AuthenticationService.onRefresh.addCallback(this.UpdateHeader);
+    AuthenticationService.onRefresh.addCallback(WebSocketService.UpdateHeader);
 
-    AuthenticationService.onRefreshFailed.addCallback(this.Disconnect);
-    AuthenticationService.onLogout.addCallback(this.Disconnect);
+    AuthenticationService.onRefreshFailed.addCallback(WebSocketService.Disconnect);
+    AuthenticationService.onLogout.addCallback(WebSocketService.Disconnect);
   }
 
-  private static UpdateHeader = () => {
-    if (!this._stompClient) return;
+  private static UpdateHeader() {
+    if (!WebSocketService._stompClient) return;
 
-    this._stompClient.connectHeaders = {
+    WebSocketService._stompClient.connectHeaders = {
       [AppAxiosHeaders.JWT]: AppAxiosConfig.jwt
     }
   }
 
-  private static Connect = () => {
+  private static Connect() {
     let query = new URLSearchParams({
       [AppAxiosHeaders.JWT]: AppAxiosConfig.jwt
     }).toString();
 
-    this._stompClient = new Client({
+    WebSocketService._stompClient = new Client({
       brokerURL: `${WS_ENDPOINT}?${query}`,
       connectHeaders: {
         [AppAxiosHeaders.JWT]: AppAxiosConfig.jwt
       },
       reconnectDelay: 5000,
       stompVersions: new Versions([Versions.V1_2]),
-      onConnect: this.OnConnected,
-      onDisconnect: this.OnDisconnected,
-      onWebSocketError: this.OnConnectError
+      onConnect: WebSocketService.OnConnected,
+      onDisconnect: WebSocketService.OnDisconnected,
+      onWebSocketError: WebSocketService.OnConnectError
     });
 
 
-    this._stompClient.activate();
+    WebSocketService._stompClient.activate();
   }
 
-  private static Disconnect = () => {
-    if (!this._stompClient) return;
+  private static Disconnect() {
+    if (!WebSocketService._stompClient) return;
 
-    this._stompClient!.deactivate();
-    this._stompClient = null;
+    WebSocketService._stompClient!.deactivate();
+    WebSocketService._stompClient = null;
   }
 
-  private static OnConnected: frameCallbackType = (receipt) => {
+  private static OnConnected() {
     Log.log(WEBSOCKET_LOG, `Connected to ${WS_ENDPOINT}`);
     
-    this._isConnected = true;
-    this._retryCounter = 0;
-    this.onConnect.invoke(undefined);
+    WebSocketService._isConnected = true;
+    WebSocketService._retryCounter = 0;
+
+    WebSocketService.stompClient!.subscribe(urlJoin(WS_USERS_ENDPOINT, AuthenticationService.playerInfo!.username), (message) => {
+      WebSocketService.onReply.invoke(JSON.parse(message.body));
+    }, {id: "users-subscription"})
+
+    WebSocketService.onConnect.invoke(undefined);
   }
 
-  private static OnDisconnected = (receipt: IFrame | undefined) => {
+  private static OnDisconnected(receipt: IFrame | undefined) {
     Log.log(WEBSOCKET_LOG, `Disconnected to ${WS_ENDPOINT}`);
-    this._isConnected = false;
-    this._retryCounter = 0;
-    this.onDisconnect.invoke(undefined);
+    WebSocketService._isConnected = false;
+    WebSocketService._retryCounter = 0;
+    WebSocketService.onDisconnect.invoke(undefined);
   }
 
-  private static OnConnectError: wsErrorCallbackType<any> = (evt) => {
-    if (this._retryCounter > this._maxRetry) {
-      this._stompClient?.deactivate();
+  private static OnConnectError() {
+    if (WebSocketService._retryCounter > WebSocketService._maxRetry) {
+      WebSocketService._stompClient?.deactivate();
       // Because websocket deactivate doesn't actually call disconnect.
-      if (this._isConnected) {
-        this.OnDisconnected(undefined);
+      if (WebSocketService._isConnected) {
+        WebSocketService.OnDisconnected(undefined);
       }
 
       Log.error(WEBSOCKET_LOG, `Maximum retry time reached, connection closed`);
       return;
     }
 
-    Log.error("Websocket", `There is an error with the connection, retry time: ${++this._retryCounter}`)
+    Log.error("Websocket", `There is an error with the connection, retry time: ${++WebSocketService._retryCounter}`)
   }
 
   private static _retryCounter = 0;
   private static readonly _maxRetry = 5;
   private static _isConnected = false;
   public static get isConnected() {
-    return this._isConnected;
+    return WebSocketService._isConnected;
   }
 
   private static _stompClient: Client | null;
   public static get stompClient() {
-    return this._stompClient;
+    return WebSocketService._stompClient;
   }
 
   public static onConnect = new EventHandler<undefined>();
   public static onDisconnect = new EventHandler<undefined>();
+
+  // This could be either confirmation or error that sent by the server to specific client
+  public static onReply = new EventHandler<ResponseObject<any>>();
 }

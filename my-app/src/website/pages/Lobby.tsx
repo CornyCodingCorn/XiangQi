@@ -3,15 +3,20 @@ import { useNavigate } from "react-router-dom";
 import { LobbyMessageType } from "../dto/LobbyMessage";
 import { LobbiesService } from "../services/LobbiesService";
 import { LobbyService } from "../services/LobbyService";
+import { GamePlay } from "./GamePlay";
 
 export interface ILobbyProps {}
 
 export default function Lobby(props: ILobbyProps) {
   const [info, setInfo] = React.useState(LobbyService.lobbyInfo);
+  const [isPlaying, setIsPlaying] = React.useState(false);
 
   React.useEffect(() => { 
     let clb = (type: LobbyMessageType) => {
       setInfo(LobbyService.lobbyInfo);
+      if (type == LobbyMessageType.START) {
+        setIsPlaying(true);
+      }
     }
 
     LobbyService.onLobbyInfoChanged.addCallback(clb);
@@ -22,8 +27,10 @@ export default function Lobby(props: ILobbyProps) {
     }
   }, [])
 
+  // To render game play without actually routing to another route
   return info.player1 !== "" ? (
-    <div className="container">
+    !isPlaying ? (
+      <div id="lobbyPage" className="container">
       <div className="text-center fw-bold fs-3">Lobby {LobbyService.lobbyID}</div>
       <div>
         <span>Player1: {info.player1} | </span>
@@ -37,6 +44,7 @@ export default function Lobby(props: ILobbyProps) {
         <button className="btn btn-primary fw-bold" onClick={Ready}>Ready</button>
       </div>
     </div>
+    ) : (<GamePlay/>)
   ) : <div></div>;
 }
 

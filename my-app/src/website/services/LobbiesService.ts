@@ -12,11 +12,8 @@ import { LobbyService } from "./LobbyService";
 import { WebSocketService } from "./WebsocketService";
 
 export const LOBBIES_URL = urlJoin(SERVER_URL, "/api/v1/lobbies");
-
 export const LOBBIES_WS_LOBBIES_BROKER = "/lobbies";
-
 export const LOBBIES_WS_LOBBY_MESSAGE = "/ws/lobbies";
-export const LOBBIES_WS_LOBBY_MOVES = "/ws/lobbies/moves";
 
 /**
  * Join lobby: subscribe to lobby

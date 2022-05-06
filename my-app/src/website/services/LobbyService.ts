@@ -1,21 +1,27 @@
 import { StompSubscription } from "@stomp/stompjs";
 import urlJoin from "url-join";
 import EventHandler from "../../utils/EventHandler";
+import { Log } from "../../utils/Log";
 import { AppAxios } from "../configurations/axiosConfig";
 import { LobbyDto } from "../dto/LobbyDto";
 import { LobbyMessage, LobbyMessageType } from "../dto/LobbyMessage";
 import ResponseObject from "../dto/ResponseObject";
-import { LOBBIES_URL, LOBBIES_WS_LOBBIES_BROKER } from "./LobbiesService";
+import AuthenticationService from "./AuthenticationService";
+import {
+  LOBBIES_URL,
+  LOBBIES_WS_LOBBIES_BROKER,
+  LOBBIES_WS_LOBBY_MESSAGE,
+} from "./LobbiesService";
 import { WebSocketService } from "./WebsocketService";
 
 export interface LobbyInfo {
-  lobbyID: string,
+  lobbyID: string;
 
-  player1: string,
-  player2: string,
+  player1: string;
+  player2: string;
 
-  player1Ready: boolean,
-  player2Ready: boolean,
+  player1Ready: boolean;
+  player2Ready: boolean;
 }
 
 export class LobbyService {
@@ -61,62 +67,69 @@ export class LobbyService {
       player2: this.player2,
 
       player1Ready: this.player1Ready,
-      player2Ready: this.player2Ready
-    }
+      player2Ready: this.player2Ready,
+    };
   }
 
-  public static readonly onLobbyInfoChanged = new EventHandler<LobbyMessageType>();
+  public static readonly onLobbyInfoChanged = new EventHandler<
+    LobbyMessageType
+  >();
 
-  public static Ready(callback?: (err?: Error, lobby?: LobbyDto) => void): void {
-    AppAxios.put(urlJoin(LOBBIES_URL, "ready")).then((res) => {
-      let resObj: ResponseObject<LobbyDto> = res.data;
+  public static Ready(): void {
+    let message: LobbyMessage = {
+      player: AuthenticationService.playerInfo!.username,
+      type: LobbyMessageType.CHANGE_READY,
+    };
 
-      if (callback)
-        callback(undefined, resObj.data);
-    })
-    .catch((err) => {
-      if (callback)
-        callback(err);
-    })
+    WebSocketService.stompClient!.publish({
+      destination: urlJoin(LOBBIES_WS_LOBBY_MESSAGE, this.lobbyInfo.lobbyID),
+      body: JSON.stringify(message),
+    });
   }
+
+  public static Move(moveStr: string, callback?: (err?: Error) => void) {}
 
   public static Join(
     lobbyID: string,
     callback?: (err?: Error, lobby?: LobbyDto) => void
   ) {
-    AppAxios.put(`${LOBBIES_URL}?id=${lobbyID}`).then((res) => {
-      let resObj: ResponseObject<LobbyDto> = res.data;
-      this.SubscribeToLobby(resObj.data);
+    AppAxios.put(`${LOBBIES_URL}?id=${lobbyID}`)
+      .then((res) => {
+        let resObj: ResponseObject<LobbyDto> = res.data;
+        this.SubscribeToLobby(resObj.data);
 
-      if (callback)
-        callback(undefined, resObj.data);
-    }).catch((err) => {
-      if (callback)
-        callback(err, undefined);
-    });
+        if (callback) callback(undefined, resObj.data);
+      })
+      .catch((err) => {
+        if (callback) callback(err, undefined);
+      });
   }
 
   //Subscribe to lobby with id
   public static SubscribeToLobby(lobby: LobbyDto) {
     // Make sure to update the lobby info;
-    this.SetInfo(lobby)
+    this.SetInfo(lobby);
     this.UnsubscribeToLobby();
 
     this.onLobbyInfoChanged.invoke(LobbyMessageType.JOIN);
+    WebSocketService.onReply.addCallback(this.OnServerReply);
 
     this._lobbySubscription = WebSocketService.stompClient!.subscribe(
       urlJoin(LOBBIES_WS_LOBBIES_BROKER, lobby.id),
       (message) => {
         let lobbyMessage: LobbyMessage = JSON.parse(message.body);
         let validMessage = true;
-        this.SetInfo(lobbyMessage.lobby);
+        if (lobbyMessage.lobby) this.SetInfo(lobbyMessage.lobby);
 
         switch (lobbyMessage.type) {
           case LobbyMessageType.CHANGE_READY:
+            if (!lobbyMessage.lobby) validMessage = false;
             break;
           case LobbyMessageType.DISCONNECT:
+            if (!lobbyMessage.lobby) validMessage = false;
             break;
           case LobbyMessageType.JOIN:
+            if (!lobbyMessage.lobby) validMessage = false;
             break;
           case LobbyMessageType.MOVE:
             break;
@@ -133,8 +146,8 @@ export class LobbyService {
   }
 
   public static UnsubscribeToLobby() {
-    if (this._lobbySubscription)
-      this._lobbySubscription.unsubscribe();
+    if (this._lobbySubscription) this._lobbySubscription.unsubscribe();
+    WebSocketService.onReply.removeCallback(this.OnServerReply);
   }
 
   private static SetInfo(lobby: LobbyDto) {
@@ -147,7 +160,14 @@ export class LobbyService {
     this._player2Ready = lobby.player2Ready;
 
     this._isPlayer1Red = lobby.player1 === lobby.redPlayer;
+  }
 
-
+  private static OnServerReply = (response: ResponseObject<any>) => {
+    if (response.status >= 300) {
+      Log.error("WS_ERROR", JSON.stringify(response, null, 2))
+    }
+    else {
+      Log.log("WS_LOG", JSON.stringify(response, null, 2));
+    }
   }
 }

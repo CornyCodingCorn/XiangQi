@@ -11,8 +11,8 @@ export enum LobbyMessageType {
 export class LobbyMessage {
   constructor(
     public readonly player: string,
-    public readonly data: string,
     public readonly type: LobbyMessageType,
-    public readonly lobby: LobbyDto
+    public readonly data?: string,
+    public readonly lobby?: LobbyDto
     ) {}
 }
