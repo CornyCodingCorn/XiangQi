@@ -143,7 +143,7 @@ export class Board extends BoardInfo {
 		// Check if the king is seeing each other :))
 		if (ourKing.location.x === king.location.x) {
 			let startIdx = Math.min(ourKing.location.y, king.location.y) + 1;
-			let endIdx = Math.max(ourKing.location.y, king.location.y) - 1;
+			let endIdx = Math.max(ourKing.location.y, king.location.y);
 
 			let blocked = false;
 			for (let i = startIdx; i < endIdx; i++) {
