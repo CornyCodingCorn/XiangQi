@@ -54,6 +54,13 @@ export class LobbyService {
   public static get isPlayer1Red() {
     return LobbyService._isPlayer1Red;
   }
+
+  // Check if the client is a red or black
+  public static get isPlayerRed() {
+    return (this.player1 === AuthenticationService.playerInfo!.username && this._isPlayer1Red) 
+    || (this.player2 === AuthenticationService.playerInfo!.username && !this._isPlayer1Red);
+  }
+
   private static _message: string[] = [];
   public static get message(): string[] {
     return LobbyService._message;
@@ -74,6 +81,7 @@ export class LobbyService {
   public static readonly onLobbyInfoChanged = new EventHandler<
     LobbyMessageType
   >();
+  public static readonly onLobbyMoveReceive = new EventHandler<LobbyMessage>();
 
   public static Ready(): void {
     let message: LobbyMessage = {
@@ -87,7 +95,18 @@ export class LobbyService {
     });
   }
 
-  public static Move(moveStr: string, callback?: (err?: Error) => void) {}
+  public static Move(moveStr: string) {
+    let message: LobbyMessage = {
+      player: AuthenticationService.playerInfo!.username,
+      type: LobbyMessageType.MOVE,
+      data: moveStr,
+    }
+    
+    WebSocketService.stompClient!.publish({
+      destination: urlJoin(LOBBIES_WS_LOBBY_MESSAGE, this.lobbyInfo.lobbyID),
+      body: JSON.stringify(message)
+    })
+  }
 
   public static Join(
     lobbyID: string,
@@ -118,29 +137,29 @@ export class LobbyService {
       urlJoin(LOBBIES_WS_LOBBIES_BROKER, lobby.id),
       (message) => {
         let lobbyMessage: LobbyMessage = JSON.parse(message.body);
-        let validMessage = true;
+        let updateLobbyInfo = true;
         if (lobbyMessage.lobby) this.SetInfo(lobbyMessage.lobby);
 
         switch (lobbyMessage.type) {
           case LobbyMessageType.CHANGE_READY:
-            if (!lobbyMessage.lobby) validMessage = false;
-            break;
           case LobbyMessageType.DISCONNECT:
-            if (!lobbyMessage.lobby) validMessage = false;
-            break;
           case LobbyMessageType.JOIN:
-            if (!lobbyMessage.lobby) validMessage = false;
+            if (!lobbyMessage.lobby) updateLobbyInfo = false;
             break;
           case LobbyMessageType.MOVE:
+            if (lobbyMessage.player !==  AuthenticationService.playerInfo!.username) {
+              this.onLobbyMoveReceive.invoke(lobbyMessage);
+            }
+            updateLobbyInfo = false;
             break;
           case LobbyMessageType.START:
-            // Need to thing more about this
+            // Don't need to do anything just start
             break;
           default:
-            validMessage = false;
+            updateLobbyInfo = false;
             break;
         }
-        if (validMessage) this.onLobbyInfoChanged.invoke(lobbyMessage.type);
+        if (updateLobbyInfo) this.onLobbyInfoChanged.invoke(lobbyMessage.type);
       }
     );
   }

@@ -14,9 +14,9 @@ export interface IBoardProps extends IBgCanvasProps, IOverlayProps {
   board: string;
 
   pieceSize: number;
-  onMoveCheck: (moveStr: string) => Promise<boolean>;
+  onMove: (moveStr: string, unlockClb: (oMoveStr: string) => void) => void;
 
-  isFlipped: boolean;
+  isPlayerRed: boolean;
 }
 
 export interface IBoardState extends IBgCanvasStates, IOverlayStates {
@@ -24,7 +24,7 @@ export interface IBoardState extends IBgCanvasStates, IOverlayStates {
 
   pieceSize: number;
 
-  isFlipped: boolean;
+  isPlayerRed: boolean;
 }
 
 export default class Board extends BoardBase<IBoardProps, IBoardState> {
@@ -42,6 +42,7 @@ export default class Board extends BoardBase<IBoardProps, IBoardState> {
 
   // This board is for constant change, the state board is only for removing/adding pieces
 
+  private _isRedTurn = true;
   private _board: BoardLogic = BoardLogic.getInstance();
   public get board(): string {
     return this._board.getBoard();
@@ -64,6 +65,7 @@ export default class Board extends BoardBase<IBoardProps, IBoardState> {
       ...this.props,
     };
 
+    this._isRedTurn = true;
     this._board.setBoard(this.state.board);
   }
 
@@ -74,6 +76,7 @@ export default class Board extends BoardBase<IBoardProps, IBoardState> {
       position: "relative",
       width: BoardBase.boardWidth,
       height: BoardBase.boardHeight,
+      transform: `scale(1, ${!this.props.isPlayerRed ? "-1" : "1"})`,
     };
 
     let playArea: React.CSSProperties = {
@@ -97,6 +100,9 @@ export default class Board extends BoardBase<IBoardProps, IBoardState> {
       key: "overlay",
       ref: (o) => {
         this._overlay = o;
+        if (o && !this.state.isPlayerRed) {
+          this.props.onMove("", this.unlock);
+        }
       },
     });
 
@@ -124,22 +130,21 @@ export default class Board extends BoardBase<IBoardProps, IBoardState> {
 
       let col = i % BoardConst.BOARD_COL;
       let row = Math.floor(i / BoardConst.BOARD_COL);
-      //let x = this.state.horizontalPadding + col * this.state.cellWidth;
-      let y = this.state.verticalPadding + row * this.state.cellHeight;
-
-      if (this.state.isFlipped) {
-        y = BoardBase.boardHeight - y;
-      }
 
       pieces.push(
         React.createElement(Piece, {
           key: i,
           x: col,
           y: row,
+          isFlipped: !this.props.isPlayerRed,
           size: this.state.pieceSize,
           type: type,
           isRed: isRed,
-          ref: this._addPieceToCollection,
+          ref: c => {
+            if (c !== null) {
+              this._pieceCollection.push(c);
+            }
+          },
           onMouseDown: this._selectPiece,
         })
       );
@@ -154,71 +159,99 @@ export default class Board extends BoardBase<IBoardProps, IBoardState> {
     // Receive format: pos1/pos2/pos3/pos4/.. Each pos is just x and y and each is 1 digit
     // Maybe should just check the move ourself
 
-    if (this._overlay)
+    if (
+      this._overlay &&
+      (this.state.isPlayerRed ? this._isRedTurn : !this._isRedTurn) &&
+      (piece.state.isRed ? this.state.isPlayerRed : !this.state.isPlayerRed)
+    ) {
       this._overlay.show(piece, (x, y, e) => {
-        if (e === SelectionEvent.Canceled) {
-          if (this._overlay) this._overlay.hide();
-          return;
+        let moveString = this._movePiece(piece, x, y, e);
+        if (this._overlay) this._overlay.hide();
+        if (moveString !== "") {
+          this._isRedTurn = !this._isRedTurn;
+          this.props.onMove(moveString, this.unlock);
         }
-        piece.zIndex = 1;
-
-        // Send the selected move to the server, server reply whether it is ok or not. Format `{x}{y}{toX}{toY}`
-
-        // This is assuming that the server said ok.
-        // Maybe not rerendering but just move the piece by playing animation.
-        // The state.board is just for reloading the board.
-
-        let oldIndex = piece.state.x + piece.state.y * BoardConst.BOARD_COL;
-        let newIndex = x + y * BoardConst.BOARD_COL;
-
-        let pieceChar = piece.state.isRed
-          ? piece.state.type.toUpperCase()
-          : piece.state.type.toLowerCase();
-        let moveString = `${piece.state.x}${piece.state.y}${pieceChar}${x}${y}`;
-
-        this.props.onMoveCheck(moveString).then((value) => {
-          if (!value) {
-            if (this._overlay) this._overlay.hide();
-            return;
-          }
-
-          this._board.setBoard(
-            StringUtils.replaceCharAt(
-              this._board.getBoard(),
-              this._board.getBoard()[oldIndex],
-              newIndex
-            )
-          );
-          this._board.setBoard(
-            StringUtils.replaceCharAt(
-              this._board.getBoard(),
-              PieceType.Empty,
-              oldIndex
-            )
-          );
-
-          // To tell react that it needs to delete the old piece and not the new one.
-          let midStepBoard = StringUtils.replaceCharAt(
-            this._board.getBoard(),
-            PieceType.Empty,
-            newIndex
-          );
-
-          piece.MoveTo(x, y, 0.25, () => {
-            if (this._overlay) this._overlay.hide();
-            this.setState({ board: midStepBoard });
-            this.setState({ board: this._board.getBoard() });
-            piece.zIndex = 0;
-          });
-        });
       });
+    }
   };
 
-  private _addPieceToCollection = (piece: Piece | null) => {
-    if (piece === null) return;
-
-    this._pieceCollection.push(piece);
+  private unlock = (moveStr: String) => {
+    this._handleOtherMoveStr(moveStr);
+    this._isRedTurn = !this._isRedTurn;
   };
+
+  private _handleOtherMoveStr(oMoveStr: String) {
+    let oldX = Number.parseInt(oMoveStr[0]);
+    let oldY = Number.parseInt(oMoveStr[1]);
+
+    let newX = Number.parseInt(oMoveStr[3]);
+    let newY = Number.parseInt(oMoveStr[4]);
+
+    // Get the correct piece and simulate player moving piece
+    for (let i = 0; i < this._pieceCollection.length; i++) {
+      let pieceI = this._pieceCollection[i];
+      if (pieceI.state.x === oldX && pieceI.state.y === oldY) {
+        this._movePiece(pieceI, newX, newY, SelectionEvent.Selected);
+        break;
+      }
+    }
+  }
+
+  private _movePiece(piece: Piece, x: number, y: number, e: SelectionEvent) {
+    if (e === SelectionEvent.Canceled) {
+      if (this._overlay) this._overlay.hide();
+      return "";
+    }
+    piece.zIndex = 1;
+
+    // Send the selected move to the server, server reply whether it is ok or not. Format `{x}{y}{toX}{toY}`
+
+    // This is assuming that the server said ok.
+    // Maybe not rerendering but just move the piece by playing animation.
+    // The state.board is just for reloading the board.
+
+    let oldIndex = piece.state.x + piece.state.y * BoardConst.BOARD_COL;
+    let newIndex = x + y * BoardConst.BOARD_COL;
+
+    let pieceChar = piece.state.isRed
+      ? piece.state.type.toUpperCase()
+      : piece.state.type.toLowerCase();
+    let moveString = `${piece.state.x}${piece.state.y}${pieceChar}${x}${y}`;
+
+    // Don't care if it's valid move or not because the UI should have done all the check, if the client change the
+    // JS then it's their problem.
+    // But will lock the ui until the other player move
+
+    this._board.setBoard(
+      StringUtils.replaceCharAt(
+        this._board.getBoard(),
+        this._board.getBoard()[oldIndex],
+        newIndex
+      )
+    );
+    this._board.setBoard(
+      StringUtils.replaceCharAt(
+        this._board.getBoard(),
+        PieceType.Empty,
+        oldIndex
+      )
+    );
+
+    // To tell react that it needs to delete the old piece and not the new one.
+    let midStepBoard = StringUtils.replaceCharAt(
+      this._board.getBoard(),
+      PieceType.Empty,
+      newIndex
+    );
+
+    piece.MoveTo(x, y, 0.25, () => {
+      this.setState({ board: midStepBoard });
+      this.setState({ board: this._board.getBoard() });
+      piece.zIndex = 0;
+    });
+
+    return moveString;
+  }
 }
 
 /**

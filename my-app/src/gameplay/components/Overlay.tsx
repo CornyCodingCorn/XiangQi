@@ -108,6 +108,14 @@ export default class Overlay extends React.Component<
 		this._callback = callback;
 	}
 
+	public showEmpty() {
+		this.setState({
+			moveString: "",
+			moveVisible: true,
+			board: BoardLogic.getInstance().getBoard()
+		})
+	}
+
 	public cancelSelection() {
 		this.setState({
 			moveString: "",

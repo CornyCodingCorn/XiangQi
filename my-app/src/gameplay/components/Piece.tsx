@@ -14,6 +14,8 @@ export interface IPieceProps {
 	clipWidth?: number;
 	clipHeight?: number;
 
+	isFlipped?: boolean;
+
 	onMouseDown?: (arg0: Piece) => void;
 	onMouseUp?: (arg0: Piece) => void;
 
@@ -127,7 +129,7 @@ export default class Piece extends React.Component<IPieceProps, IPieceState> {
 		let style: React.CSSProperties = {
 			left: `${(this.state.x * 100) / (Piece.BOARD_COL - 1)}%`,
 			top: `${(this.state.y * 100) / (Piece.BOARD_ROW - 1)}%`,
-			transform: "translate(-50%, -50%)",
+			transform: `translate(-50%, -50%) ${this.props.isFlipped ? "scale(1, -1)" : "scale(1, 1)"}`,
 			position: "absolute",
 			zIndex: this.state.zIndex,
 		};

@@ -41,6 +41,8 @@ export class WebSocketService {
       connectHeaders: {
         [AppAxiosHeaders.JWT]: AppAxiosConfig.jwt
       },
+      heartbeatIncoming: 35000,
+      heartbeatOutgoing: 30000,
       reconnectDelay: 5000,
       stompVersions: new Versions([Versions.V1_2]),
       onConnect: WebSocketService.OnConnected,
