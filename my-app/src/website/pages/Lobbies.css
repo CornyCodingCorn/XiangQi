@@ -1,8 +1,7 @@
 .lobbiesTable {
   display: block;
-  height: 600px;
-  width: 400px;
   overflow: auto;
+  min-height: 450px;
   transform: translate(0, -15px);
 }
 

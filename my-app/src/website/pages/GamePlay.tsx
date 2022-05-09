@@ -1,8 +1,11 @@
 import * as React from "react";
 import Board from "../../gameplay/components/Board";
+import { gameplayBgBlack, gameplayBgRed } from "../../resources/backgrounds/bgIndex";
+import PlayerInfo from "../components/PlayerInfo";
 import { LobbyMessage } from "../dto/LobbyMessage";
+import AuthenticationService from "../services/AuthenticationService";
 import { LobbyService } from "../services/LobbyService";
-import "./GamePlay.css"
+import "./GamePlay.css";
 
 const BOARD_COLOR = 0xefcc8b;
 const PAD_COLOR = 0x724726;
@@ -15,33 +18,44 @@ const PADDING = 46;
 const PIECE_SIZE = 64;
 const CELL_SIZE = 70;
 
+let unlockClb: ((oMoveStr: string) => void) | undefined;
+
 export interface IGamePlayProps {}
 
 export function GamePlay(props: IGamePlayProps) {
   const [board, setBoard] = React.useState(Board.BOARD_STR);
-  const [isPlayerRed, setIsPlayerRed] = React.useState(LobbyService.isPlayerRed);
+  const [isPlayerTurn, setIsPlayerTurn] = React.useState(false);
+  const [isPlayerRed, setIsPlayerRed] = React.useState(
+    LobbyService.isPlayerRed
+  );
 
-  let unlockClb: ((oMoveStr: string) => void) | undefined;  
   const onMove = (moveStr: string, unlock: (oMoveStr: string) => void) => {
     // moveStr == "" mean the player is black
     unlockClb = unlock;
     if (moveStr === "") {
       return;
     }
+
+    setIsPlayerTurn(!isPlayerTurn);
     LobbyService.Move(moveStr);
   };
-  
+
   React.useEffect(() => {
+    if (LobbyService.isPlayerRed) setIsPlayerTurn(!isPlayerTurn);
     let onMoveClb = (message: LobbyMessage) => {
       if (unlockClb == null || !message.data) return;
+
+      let flip = !isPlayerTurn;
+      setIsPlayerTurn(flip);
+
       unlockClb(message.data);
-    }
+    };
 
     LobbyService.onLobbyMoveReceive.addCallback(onMoveClb);
     return () => {
       LobbyService.onLobbyMoveReceive.removeCallback(onMoveClb);
-    }
-  }, [])
+    };
+  }, []);
 
   let boardComponent = React.createElement(Board, {
     onMove: onMove,
@@ -72,16 +86,61 @@ export function GamePlay(props: IGamePlayProps) {
     cellHeight: CELL_SIZE,
   });
 
+  let infoTop: React.CSSProperties = {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+  };
+
+  let infoBottom: React.CSSProperties = {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+  };
+
+  let player = AuthenticationService.playerInfo!.username;
+  let lobbyInfo = LobbyService.lobbyInfo;
+  let otherPlayer =
+    lobbyInfo.player1 === player ? lobbyInfo.player2 : lobbyInfo.player1;
+
+  let bgImage: React.CSSProperties = {
+    backgroundImage: `url(${(isPlayerRed ? gameplayBgRed : gameplayBgBlack)})`,
+    backgroundSize: "cover"
+  }
+
   return (
-    <div className="container h-100">
-      <div className="row h-100">
-        <div className="col-xl-8 d-flex justify-content-center h-100 align-content-center">
-          <div className="board-div align-self-center">
-            {boardComponent}
+    <div className="h-100" style={bgImage}>
+      <div className="container h-100">
+        <div className="row h-100">
+          <div className="col-xl-8 d-flex justify-content-center h-100 align-content-center">
+            <div className="board-div align-self-center">{boardComponent}</div>
           </div>
-        </div>
-        <div className="col-xl-4 h-100 d-flex">
-          <div className="card card-body rounded-3 my-5"></div>
+          <div className="d-flex flex-column col-xl-4 h-100">
+            <div className="card card-body rounded-3 my-5">
+              <div key={"other-player"} style={infoTop} className="mx-3 my-3">
+                <PlayerInfo
+                  playerName={otherPlayer}
+                  imageURL={"test"}
+                  isPlayerTurn={!isPlayerTurn}
+                  height={75}
+                  profileSize={60}
+                  isRed={!LobbyService.isPlayerRed}
+                />
+              </div>
+              <div key={"player"} style={infoBottom} className="mx-3 my-3">
+                <PlayerInfo
+                  playerName={player}
+                  imageURL={"test"}
+                  isPlayerTurn={isPlayerTurn}
+                  height={75}
+                  profileSize={60}
+                  isRed={LobbyService.isPlayerRed}
+                />
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
