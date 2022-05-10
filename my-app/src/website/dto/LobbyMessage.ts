@@ -5,7 +5,13 @@ export enum LobbyMessageType {
   DISCONNECT = "DISCONNECT",
   CHANGE_READY = "CHANGE_READY",
   MOVE = "MOVE",
-  START = "START"
+  START = "START",
+  END = "END",
+}
+
+export enum LobbyMessageEndType {
+  WIN = "WIN",
+  DRAW = "DRAW",
 }
 
 export class LobbyMessage {

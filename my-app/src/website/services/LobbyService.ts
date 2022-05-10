@@ -22,6 +22,8 @@ export interface LobbyInfo {
 
   player1Ready: boolean;
   player2Ready: boolean;
+
+  board: string;
 }
 
 export class LobbyService {
@@ -66,6 +68,11 @@ export class LobbyService {
     return LobbyService._message;
   }
 
+  private static _board: string = "";
+  public static get board(): string {
+    return LobbyService._board;
+  }
+ 
   public static get lobbyInfo(): LobbyInfo {
     return {
       lobbyID: this.lobbyID,
@@ -75,6 +82,8 @@ export class LobbyService {
 
       player1Ready: this.player1Ready,
       player2Ready: this.player2Ready,
+
+      board: this.board
     };
   }
 
@@ -82,6 +91,7 @@ export class LobbyService {
     LobbyMessageType
   >();
   public static readonly onLobbyMoveReceive = new EventHandler<LobbyMessage>();
+  public static readonly onLobbyEndReceive = new EventHandler<LobbyMessage>();
 
   public static Ready(): void {
     let message: LobbyMessage = {
@@ -155,6 +165,9 @@ export class LobbyService {
           case LobbyMessageType.START:
             // Don't need to do anything just start
             break;
+          case LobbyMessageType.END:
+            this.onLobbyEndReceive.invoke(lobbyMessage);
+            break;
           default:
             updateLobbyInfo = false;
             break;
@@ -179,6 +192,8 @@ export class LobbyService {
     this._player2Ready = lobby.player2Ready;
 
     this._isPlayer1Red = lobby.player1 === lobby.redPlayer;
+
+    this._board = lobby.board;
   }
 
   private static OnServerReply = (response: ResponseObject<any>) => {

@@ -9,6 +9,8 @@ export class LobbyDto {
     public readonly player2Ready: boolean,
 
     public readonly blackPlayer: string,
-    public readonly redPlayer: string
+    public readonly redPlayer: string,
+
+    public readonly board: string,
   ) {}
 }

@@ -1,8 +1,12 @@
 import * as React from "react";
+import { useNavigate } from "react-router-dom";
 import Board from "../../gameplay/components/Board";
-import { gameplayBgBlack, gameplayBgRed } from "../../resources/backgrounds/bgIndex";
+import {
+  gameplayBgBlack,
+  gameplayBgRed,
+} from "../../resources/backgrounds/bgIndex";
 import PlayerInfo from "../components/PlayerInfo";
-import { LobbyMessage } from "../dto/LobbyMessage";
+import { LobbyMessage, LobbyMessageEndType, LobbyMessageType } from "../dto/LobbyMessage";
 import AuthenticationService from "../services/AuthenticationService";
 import { LobbyService } from "../services/LobbyService";
 import "./GamePlay.css";
@@ -18,13 +22,45 @@ const PADDING = 46;
 const PIECE_SIZE = 64;
 const CELL_SIZE = 70;
 
+enum State {
+  WIN,
+  LOST,
+  DRAW
+}
+
 let unlockClb: ((oMoveStr: string) => void) | undefined;
+let boardRef: Board;
+
+let state: State = State.DRAW;
+function getStateClassName() {
+  switch(state) {
+    case State.DRAW:
+      return "bg-warning";
+    case State.LOST:
+      return "bg-danger";
+    case State.WIN:
+      return "bg-success";
+  }
+}
+
+function getStateString() {
+  switch(state) {
+    case State.DRAW:
+      return "Draw";
+    case State.LOST:
+      return "Lost";
+    case State.WIN:
+      return "Victory";
+  }
+}
 
 export interface IGamePlayProps {}
 
 export function GamePlay(props: IGamePlayProps) {
-  const [board, setBoard] = React.useState(Board.BOARD_STR);
+  const navigate = useNavigate();
+  const [board, setBoard] = React.useState(LobbyService.board);
   const [isPlayerTurn, setIsPlayerTurn] = React.useState(false);
+  const [isGameEnd, setIsGameEnd] = React.useState(false);
   const [isPlayerRed, setIsPlayerRed] = React.useState(
     LobbyService.isPlayerRed
   );
@@ -51,8 +87,40 @@ export function GamePlay(props: IGamePlayProps) {
       unlockClb(message.data);
     };
 
+    let onWinOrDraw = (message: LobbyMessage) => {
+      if (!message.data) return;
+
+      if (message.type === LobbyMessageType.END) {
+        // The format is `${WIN || DRAW} ${moveStr}`
+        let arr = message.data.split(" ");
+        let username = AuthenticationService.playerInfo!.username;
+        switch(arr[0]) {
+          case LobbyMessageEndType.WIN:
+            if (message.player === username) {
+              state = State.WIN;
+            } else {
+              // If lost then the other player must have moved
+              boardRef.EndMove(arr[1]);
+              state = State.LOST;
+            }
+            break;
+          case LobbyMessageEndType.DRAW:
+            state = State.DRAW;
+            // If true then the draw move need to be updated
+            if (message.player !== username) {
+              boardRef.EndMove(arr[1]);
+            }
+            break;
+        }
+
+        setIsGameEnd(true);
+      }
+    };
+
+    LobbyService.onLobbyEndReceive.addCallback(onWinOrDraw);
     LobbyService.onLobbyMoveReceive.addCallback(onMoveClb);
     return () => {
+      LobbyService.onLobbyEndReceive.removeCallback(onWinOrDraw);
       LobbyService.onLobbyMoveReceive.removeCallback(onMoveClb);
     };
   }, []);
@@ -84,6 +152,10 @@ export function GamePlay(props: IGamePlayProps) {
     pieceSize: PIECE_SIZE,
     cellWidth: CELL_SIZE,
     cellHeight: CELL_SIZE,
+    isEndGame: false,
+    ref: (c) => {
+      boardRef = c as Board;
+    },
   });
 
   let infoTop: React.CSSProperties = {
@@ -102,13 +174,13 @@ export function GamePlay(props: IGamePlayProps) {
 
   let player = AuthenticationService.playerInfo!.username;
   let lobbyInfo = LobbyService.lobbyInfo;
-  let otherPlayer =
-    lobbyInfo.player1 === player ? lobbyInfo.player2 : lobbyInfo.player1;
+  let otherPlayer = lobbyInfo.player1 === player ? lobbyInfo.player2 : lobbyInfo.player1;
+  otherPlayer = otherPlayer ? otherPlayer : "#Disconnected";
 
   let bgImage: React.CSSProperties = {
-    backgroundImage: `url(${(isPlayerRed ? gameplayBgRed : gameplayBgBlack)})`,
-    backgroundSize: "cover"
-  }
+    backgroundImage: `url(${isPlayerRed ? gameplayBgRed : gameplayBgBlack})`,
+    backgroundSize: "cover",
+  };
 
   return (
     <div className="h-100" style={bgImage}>
@@ -141,6 +213,17 @@ export function GamePlay(props: IGamePlayProps) {
               </div>
             </div>
           </div>
+          {isGameEnd ? (
+            <div className="overlay">
+              <div className="end-game-card">
+                <div key={"top"} className={`end-game-top ${getStateClassName()}`}>
+                  <h1 className="fw-bold text-center mt-3 text-white">{getStateString()}</h1>
+                </div>
+                <button className="btn btn-primary btn-play-again">Play again</button>
+                <button className="btn btn-primary btn-to-lobbies" onClick={() => navigate("/lobbies", {replace: true, })}>To lobbies</button>
+              </div>
+            </div>
+          ) : undefined}
         </div>
       </div>
     </div>

@@ -17,6 +17,7 @@ export interface IBoardProps extends IBgCanvasProps, IOverlayProps {
   onMove: (moveStr: string, unlockClb: (oMoveStr: string) => void) => void;
 
   isPlayerRed: boolean;
+  isEndGame: boolean;
 }
 
 export interface IBoardState extends IBgCanvasStates, IOverlayStates {
@@ -25,6 +26,7 @@ export interface IBoardState extends IBgCanvasStates, IOverlayStates {
   pieceSize: number;
 
   isPlayerRed: boolean;
+  isEndGame: boolean;
 }
 
 export default class Board extends BoardBase<IBoardProps, IBoardState> {
@@ -117,6 +119,13 @@ export default class Board extends BoardBase<IBoardProps, IBoardState> {
     );
   }
 
+  public EndMove(moveStr: string) {
+    this._handleOtherMoveStr(moveStr);
+    this.setState({
+      isEndGame: true
+    })
+  }
+
   private _createPieces(): JSX.Element[] {
     let pieces: JSX.Element[] = [];
     this._pieceCollection = [];
@@ -160,6 +169,7 @@ export default class Board extends BoardBase<IBoardProps, IBoardState> {
     // Maybe should just check the move ourself
 
     if (
+      !this.state.isEndGame &&
       this._overlay &&
       (this.state.isPlayerRed ? this._isRedTurn : !this._isRedTurn) &&
       (piece.state.isRed ? this.state.isPlayerRed : !this.state.isPlayerRed)
