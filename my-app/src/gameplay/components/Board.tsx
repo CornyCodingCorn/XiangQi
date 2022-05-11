@@ -119,6 +119,11 @@ export default class Board extends BoardBase<IBoardProps, IBoardState> {
     );
   }
 
+  public Restart() {
+    this._board.setBoard(Board.BOARD_STR);
+    this._isRedTurn = true;
+  }
+
   public EndMove(moveStr: string) {
     this._handleOtherMoveStr(moveStr);
     this.setState({

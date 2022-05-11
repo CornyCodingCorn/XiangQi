@@ -1,4 +1,5 @@
 import { StringUtils } from "../../utils/StringUtils";
+import Vector2 from "../../utils/Vector2";
 import { BoardConst } from "../components/BoardBase";
 import { generateMoveAdvisor } from "./Advisor";
 import { generateMoveCanon } from "./Canon";
@@ -199,8 +200,43 @@ export class Board extends BoardInfo {
 		return this._board;
 	}
   public override removeAt(x: number, y: number) {
+		let type: PieceType = this._board.charAt(x + y * BoardConst.BOARD_COL) as PieceType;
     super.removeAt(x, y);
-    this._findAllPieces();
+
+		let pieceArr: Piece[] = [];
+    switch(type) {
+			case PieceType.Rook:
+				pieceArr = this.rooks;
+				break;
+			case PieceType.Horse:
+				pieceArr = this.horses;
+				break;
+			case PieceType.Elephant:
+				pieceArr = this.elephants;
+				break;
+			case PieceType.Advisor:
+				pieceArr = this.advisors;
+				break;
+			case PieceType.King:
+				// Don't remove anything if king
+				break;
+			case PieceType.Pawn:
+				pieceArr = this.pawns;
+				break;
+			case PieceType.Cannon:
+				pieceArr = this.canons;
+				break;
+			case PieceType.Empty:
+				break;
+		}
+
+		if (pieceArr) {
+			for (let i = 0; i < pieceArr.length; i++) {
+				if (pieceArr[i].location.isEqual(Vector2.create(x, y))) {
+					pieceArr.splice(i, 1);
+				}
+			}
+		}
   }
 
 	public getInfoOfOneSide(isRed: boolean): BoardInfo {
