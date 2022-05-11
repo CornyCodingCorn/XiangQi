@@ -168,7 +168,7 @@ export default class Piece extends React.Component<IPieceProps, IPieceState> {
 			case PieceType.Advisor:
 				url = Sprites.Advisor;
 				break;
-			case PieceType.Cannon:
+			case PieceType.Canon:
 				url = Sprites.Cannon;
 				break;
 			case PieceType.Rook:

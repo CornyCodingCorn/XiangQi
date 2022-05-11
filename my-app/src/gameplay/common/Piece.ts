@@ -14,7 +14,7 @@ export enum PieceType {
 	Advisor = "a",
 	Elephant = "e",
 	Rook = "r",
-	Cannon = "c",
+	Canon = "c",
 	Horse = "h",
 	Pawn = "p",
 	Empty = "0",

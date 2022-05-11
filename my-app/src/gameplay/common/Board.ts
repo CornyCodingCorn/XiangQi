@@ -62,7 +62,7 @@ export class Board extends BoardInfo {
 			case PieceType.Rook:
 				func = generateMoveRook;
 				break;
-			case PieceType.Cannon:
+			case PieceType.Canon:
 				func = generateMoveCanon;
 				break;
 			case PieceType.Pawn:
@@ -223,7 +223,7 @@ export class Board extends BoardInfo {
 			case PieceType.Pawn:
 				pieceArr = this.pawns;
 				break;
-			case PieceType.Cannon:
+			case PieceType.Canon:
 				pieceArr = this.canons;
 				break;
 			case PieceType.Empty:
@@ -278,7 +278,7 @@ export class Board extends BoardInfo {
 
 			let piece = Piece.getPieceObject(this._board, i);
 			switch (type) {
-				case PieceType.Cannon:
+				case PieceType.Canon:
 					this.canons.push(piece);
 					break;
 				case PieceType.Horse:
