@@ -1,10 +1,10 @@
 
-import { Client, frameCallbackType, IFrame, Stomp, Versions, wsErrorCallbackType } from "@stomp/stompjs";
+import { Client, IFrame, Versions} from "@stomp/stompjs";
 import urlJoin from "url-join";
 import EventHandler from "../../utils/EventHandler";
 import { Log } from "../../utils/Log";
 import { AppAxiosConfig, AppAxiosHeaders } from "../configurations/axiosConfig";
-import { SERVER_URL, SERVER_WS_URL } from "../configurations/serverUrl";
+import { SERVER_WS_URL } from "../configurations/serverUrl";
 import ResponseObject from "../dto/ResponseObject";
 import AuthenticationService from "./AuthenticationService";
 

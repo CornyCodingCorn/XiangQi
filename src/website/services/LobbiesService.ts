@@ -1,11 +1,9 @@
-import { StompSubscription } from "@stomp/stompjs";
 import urlJoin from "url-join";
 import EventHandler from "../../utils/EventHandler";
 import { AppAxios } from "../configurations/axiosConfig";
-import { SERVER_URL, SERVER_WS_URL } from "../configurations/serverUrl";
+import { SERVER_URL } from "../configurations/serverUrl";
 import { LobbiesMessage, LobbiesMessageType } from "../dto/LobbiesMessage";
 import { LobbyDto } from "../dto/LobbyDto";
-import { LobbyMessage, LobbyMessageType } from "../dto/LobbyMessage";
 import ResponseObject from "../dto/ResponseObject";
 import AuthenticationService from "./AuthenticationService";
 import { LobbyService } from "./LobbyService";
