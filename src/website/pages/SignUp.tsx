@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Link, NavigateFunction, useLocation, useNavigate } from "react-router-dom";
+import { NavigateFunction, useLocation, useNavigate } from "react-router-dom";
 import "./SignUp.css";
 import background from "../../resources/backgrounds/chessBackground.bmp";
 import { SearchParam } from "../configurations/searchParam";

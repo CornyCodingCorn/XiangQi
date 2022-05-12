@@ -10,7 +10,6 @@ import {
 import { SERVER_URL } from "../configurations/serverUrl";
 import PlayerDto from "../dto/PlayerDto";
 import ResponseObject from "../dto/ResponseObject";
-import { LobbiesService } from "./LobbiesService";
 
 const AUTH_URL = urlJoin(SERVER_URL, "/api/auth");
 const LOGIN_URL = urlJoin(AUTH_URL, "/login");

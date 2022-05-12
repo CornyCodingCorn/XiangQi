@@ -1,4 +1,4 @@
-import axios, { AxiosError, AxiosResponseHeaders } from "axios";
+import axios, { AxiosError } from "axios";
 import { Log } from "../../utils/Log";
 import ResponseObject from "../dto/ResponseObject";
 

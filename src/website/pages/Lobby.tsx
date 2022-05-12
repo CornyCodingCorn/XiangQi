@@ -1,7 +1,5 @@
 import * as React from "react";
-import { useNavigate } from "react-router-dom";
 import { LobbyMessageType } from "../dto/LobbyMessage";
-import { LobbiesService } from "../services/LobbiesService";
 import { LobbyService } from "../services/LobbyService";
 import { GamePlay } from "./GamePlay";
 
@@ -14,7 +12,7 @@ export default function Lobby(props: ILobbyProps) {
   React.useEffect(() => { 
     let clb = (type: LobbyMessageType) => {
       setInfo(LobbyService.lobbyInfo);
-      if (type == LobbyMessageType.START) {
+      if (type === LobbyMessageType.START) {
         setIsPlaying(true);
       }
     }

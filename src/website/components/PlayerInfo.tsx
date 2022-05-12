@@ -40,7 +40,7 @@ export default function PlayerInfo (props: IPlayerInfoProps) {
           <img style={imageStyle} className="align-self-center" onError={err => {
             let image: HTMLImageElement = err.nativeEvent.target as HTMLImageElement;
             image.src = "https://cdn-icons-png.flaticon.com/512/3237/3237472.png";
-          }} src={props.imageURL}></img>
+          }} src={props.imageURL} alt={"Profile_picture"}></img>
         </div>
       </div>
       <div key={"Info div"} className="my-1 d-flex flex-column justify-content-center">

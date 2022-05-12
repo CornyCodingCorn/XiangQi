@@ -58,10 +58,10 @@ export interface IGamePlayProps {}
 
 export function GamePlay(props: IGamePlayProps) {
   const navigate = useNavigate();
-  const [board, setBoard] = React.useState(LobbyService.board);
+  const [board, /**setBoard**/] = React.useState(LobbyService.board);
   const [isPlayerTurn, setIsPlayerTurn] = React.useState(false);
   const [isGameEnd, setIsGameEnd] = React.useState(false);
-  const [isPlayerRed, setIsPlayerRed] = React.useState(
+  const [isPlayerRed, /**setIsPlayerRed**/] = React.useState(
     LobbyService.isPlayerRed
   );
 
@@ -77,12 +77,11 @@ export function GamePlay(props: IGamePlayProps) {
   };
 
   React.useEffect(() => {
-    if (LobbyService.isPlayerRed) setIsPlayerTurn(!isPlayerTurn);
+    if (LobbyService.isPlayerRed) setIsPlayerTurn(i => !i);
     let onMoveClb = (message: LobbyMessage) => {
       if (unlockClb == null || !message.data) return;
 
-      let flip = !isPlayerTurn;
-      setIsPlayerTurn(flip);
+      setIsPlayerTurn(i => !i);
 
       unlockClb(message.data);
     };
