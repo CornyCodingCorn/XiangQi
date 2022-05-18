@@ -5,6 +5,7 @@
 
 .overlay {
   position: absolute;
+  overflow: hidden;
   top: 0%;
   left: 0%;
   width: 100%;
@@ -55,6 +56,29 @@
   border-radius: 5px 5px 0px 0px;
 }
 
+#move-list-div {
+  position: relative;
+  flex-grow: 1;
+  padding-top: 100px;
+  padding-bottom: 125px;
+}
+
+#move-list {
+  position: relative;
+  overflow-y: auto;
+  max-height: 50vh;
+}
+
+.ctl-btn-div {
+  margin-left: 5px;
+}
+
+.ctl-btn {
+  margin-left: 20px;
+  margin-right: 20px;
+  margin-bottom: 10px;
+}
+
 @keyframes end-game-appear {
   from {
     top: calc(100% + 250px)
@@ -63,4 +87,3 @@
     top: calc(50% - 250px)
   };
 }
-

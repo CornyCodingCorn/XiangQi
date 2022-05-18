@@ -1,12 +1,18 @@
 import * as React from "react";
 import { useNavigate } from "react-router-dom";
 import Board from "../../gameplay/components/Board";
+import Piece from "../../gameplay/components/Piece";
 import {
   gameplayBgBlack,
   gameplayBgRed,
 } from "../../resources/backgrounds/bgIndex";
+import { PawnIconImage, PawnTextImage } from "../../resources/for-ui";
 import PlayerInfo from "../components/PlayerInfo";
-import { LobbyMessage, LobbyMessageEndType, LobbyMessageType } from "../dto/LobbyMessage";
+import {
+  LobbyMessage,
+  LobbyMessageEndType,
+  LobbyMessageType,
+} from "../dto/LobbyMessage";
 import AuthenticationService from "../services/AuthenticationService";
 import { LobbyService } from "../services/LobbyService";
 import "./GamePlay.css";
@@ -25,7 +31,7 @@ const CELL_SIZE = 70;
 enum State {
   WIN,
   LOST,
-  DRAW
+  DRAW,
 }
 
 let unlockClb: ((oMoveStr: string) => void) | undefined;
@@ -33,7 +39,7 @@ let boardRef: Board;
 
 let state: State = State.DRAW;
 function getStateClassName() {
-  switch(state) {
+  switch (state) {
     case State.DRAW:
       return "bg-warning";
     case State.LOST:
@@ -44,7 +50,7 @@ function getStateClassName() {
 }
 
 function getStateString() {
-  switch(state) {
+  switch (state) {
     case State.DRAW:
       return "Draw";
     case State.LOST:
@@ -58,10 +64,11 @@ export interface IGamePlayProps {}
 
 export function GamePlay(props: IGamePlayProps) {
   const navigate = useNavigate();
-  const [board, /**setBoard**/] = React.useState(LobbyService.board);
+  const [board /**setBoard**/] = React.useState(LobbyService.board);
   const [isPlayerTurn, setIsPlayerTurn] = React.useState(false);
   const [isGameEnd, setIsGameEnd] = React.useState(false);
-  const [isPlayerRed, /**setIsPlayerRed**/] = React.useState(
+  const [useImage, setUseIcon] = React.useState(false);
+  const [isPlayerRed /**setIsPlayerRed**/] = React.useState(
     LobbyService.isPlayerRed
   );
 
@@ -77,11 +84,11 @@ export function GamePlay(props: IGamePlayProps) {
   };
 
   React.useEffect(() => {
-    if (LobbyService.isPlayerRed) setIsPlayerTurn(i => !i);
+    if (LobbyService.isPlayerRed) setIsPlayerTurn((i) => !i);
     let onMoveClb = (message: LobbyMessage) => {
       if (unlockClb == null || !message.data) return;
 
-      setIsPlayerTurn(i => !i);
+      setIsPlayerTurn((i) => !i);
 
       unlockClb(message.data);
     };
@@ -93,7 +100,7 @@ export function GamePlay(props: IGamePlayProps) {
         // The format is `${WIN || DRAW} ${moveStr}`
         let arr = message.data.split(" ");
         let username = AuthenticationService.playerInfo!.username;
-        switch(arr[0]) {
+        switch (arr[0]) {
           case LobbyMessageEndType.WIN:
             if (message.player === username) {
               state = State.WIN;
@@ -152,6 +159,7 @@ export function GamePlay(props: IGamePlayProps) {
     cellWidth: CELL_SIZE,
     cellHeight: CELL_SIZE,
     isEndGame: false,
+    useImage: useImage,
     ref: (c) => {
       boardRef = c as Board;
     },
@@ -173,7 +181,8 @@ export function GamePlay(props: IGamePlayProps) {
 
   let player = AuthenticationService.playerInfo!.username;
   let lobbyInfo = LobbyService.lobbyInfo;
-  let otherPlayer = lobbyInfo.player1 === player ? lobbyInfo.player2 : lobbyInfo.player1;
+  let otherPlayer =
+    lobbyInfo.player1 === player ? lobbyInfo.player2 : lobbyInfo.player1;
   otherPlayer = otherPlayer ? otherPlayer : "#Disconnected";
 
   let bgImage: React.CSSProperties = {
@@ -200,7 +209,49 @@ export function GamePlay(props: IGamePlayProps) {
                   isRed={!LobbyService.isPlayerRed}
                 />
               </div>
+              <div id="move-list-div">
+                <ul id="move-list" className="list-group">
+                  <li className="list-group-item">Test</li>
+                  <li className="list-group-item">Test</li>
+                  <li className="list-group-item">Test</li>
+                  <li className="list-group-item">Test</li>
+                  <li className="list-group-item">Test</li>
+                  <li className="list-group-item">Test</li>
+                  <li className="list-group-item">Test</li>
+                  <li className="list-group-item">Test</li>
+                  <li className="list-group-item">Test</li>
+                  <li className="list-group-item">Test</li>
+                  <li className="list-group-item">Test</li>
+                  <li className="list-group-item">Test</li>
+                  <li className="list-group-item">Test</li>
+                  <li className="list-group-item">Test</li>
+                  <li className="list-group-item">Test</li>
+                  <li className="list-group-item">Test</li>
+                  <li className="list-group-item">Test</li>
+                  <li className="list-group-item">Test</li>
+                </ul>
+              </div>
               <div key={"player"} style={infoBottom} className="mx-3 my-3">
+                <div className="container row align-content-center justify-content-center w-100 ctl-btn-div">
+                  <button className="btn btn-primary ctl-btn col">
+                    <i className="bi bi-skip-backward-fill"></i>
+                  </button>
+                  <button
+                    className="btn btn-primary ctl-btn col"
+                    onClick={() => setUseIcon(!useImage)}
+                  >
+                    <img
+                      src={useImage ? PawnIconImage : PawnTextImage}
+                      alt="button-icon"
+                    ></img>
+                  </button>
+                  <button
+                    className="btn btn-primary ctl-btn col"
+                    onClick={() => LobbyService.Concede()}
+                  >
+                    <i className="bi bi-flag-fill"></i>
+                  </button>
+                </div>
                 <PlayerInfo
                   playerName={player}
                   imageURL={"test"}
@@ -215,11 +266,23 @@ export function GamePlay(props: IGamePlayProps) {
           {isGameEnd ? (
             <div className="overlay">
               <div className="end-game-card">
-                <div key={"top"} className={`end-game-top ${getStateClassName()}`}>
-                  <h1 className="fw-bold text-center mt-3 text-white">{getStateString()}</h1>
+                <div
+                  key={"top"}
+                  className={`end-game-top ${getStateClassName()}`}
+                >
+                  <h1 className="fw-bold text-center mt-3 text-white">
+                    {getStateString()}
+                  </h1>
                 </div>
-                <button className="btn btn-primary btn-play-again">Play again</button>
-                <button className="btn btn-primary btn-to-lobbies" onClick={() => navigate("/lobbies", {replace: true, })}>To lobbies</button>
+                <button className="btn btn-primary btn-play-again">
+                  Play again
+                </button>
+                <button
+                  className="btn btn-primary btn-to-lobbies"
+                  onClick={() => navigate("/lobbies", { replace: true })}
+                >
+                  To lobbies
+                </button>
               </div>
             </div>
           ) : undefined}

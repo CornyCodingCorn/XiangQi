@@ -118,6 +118,19 @@ export class LobbyService {
     })
   }
 
+  public static Concede() {
+    let message: LobbyMessage = {
+      player: AuthenticationService.playerInfo!.username,
+      type: LobbyMessageType.END,
+      data: "",
+    }
+
+    WebSocketService.stompClient!.publish({
+      destination: urlJoin(LOBBIES_WS_LOBBY_MESSAGE, this.lobbyInfo.lobbyID),
+      body: JSON.stringify(message)
+    })
+  }
+
   public static Join(
     lobbyID: string,
     callback?: (err?: Error, lobby?: LobbyDto) => void

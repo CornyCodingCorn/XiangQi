@@ -22,6 +22,8 @@ export interface IPieceProps {
 	isRed?: boolean;
 
 	type?: PieceType;
+
+	useImage: boolean;
 }
 
 export interface IPieceState {
@@ -47,18 +49,6 @@ export default class Piece extends React.Component<IPieceProps, IPieceState> {
 	public static readonly DEFAULT_CLIP_WIDTH = 100;
 	public static readonly BOARD_ROW = 10;
 	public static readonly BOARD_COL = 9;
-
-	private static _useImage = false;
-	private static _instances: Piece[] = [];
-	public static get useImage(): boolean {
-		return this._useImage;
-	}
-	public static set useImage(value: boolean) {
-		this._useImage = value;
-		this._instances.forEach((value) => {
-			value.forceUpdate();
-		});
-	}
 
 	private _timer: NodeJS.Timer | null = null;
 
@@ -112,17 +102,8 @@ export default class Piece extends React.Component<IPieceProps, IPieceState> {
 		}, step * 1000)
 	}
 
-	public componentDidMount() {
-		Piece._instances.push(this);
-	}
-
 	public componentWillUnmount() {
-		var index = Piece._instances.findIndex((element) => {
-			return element === this;
-		});
-
 		if (this._timer) clearInterval(this._timer);
-		Piece._instances.splice(index, 1);
 	}
 
 	public render() {
@@ -158,7 +139,7 @@ export default class Piece extends React.Component<IPieceProps, IPieceState> {
 	}
 
 	private _initCanvas(canvas: HTMLCanvasElement | null) {
-		if (canvas == null || this._canvas === canvas) return;
+		if (canvas == null) return;
 
 		this._canvas = canvas;
 		let context = canvas.getContext("2d");
@@ -198,7 +179,8 @@ export default class Piece extends React.Component<IPieceProps, IPieceState> {
 
 			let offsetX =
 				(this.state.isRed ? 0 : this.state.clipWidth * 2) +
-				(Piece._useImage ? this.state.clipWidth : 0);
+				(this.props.useImage ? this.state.clipWidth : 0);
+			context.clearRect(0, 0, this._canvas.width, this._canvas.height);
 			context.drawImage(
 				img,
 				offsetX,

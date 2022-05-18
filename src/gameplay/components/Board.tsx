@@ -18,6 +18,7 @@ export interface IBoardProps extends IBgCanvasProps, IOverlayProps {
 
   isPlayerRed: boolean;
   isEndGame: boolean;
+  useImage: boolean;
 }
 
 export interface IBoardState extends IBgCanvasStates, IOverlayStates {
@@ -154,6 +155,7 @@ export default class Board extends BoardBase<IBoardProps, IBoardState> {
           size: this.state.pieceSize,
           type: type,
           isRed: isRed,
+          useImage: this.props.useImage,
           ref: c => {
             if (c !== null) {
               this._pieceCollection.push(c);
