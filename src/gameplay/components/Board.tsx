@@ -104,7 +104,7 @@ export default class Board extends BoardBase<IBoardProps, IBoardState> {
       ref: (o) => {
         this._overlay = o;
         if (o && !this.state.isPlayerRed) {
-          this.props.onMove("", this.unlock);
+          this.props.onMove("", this._unlock);
         }
       },
     });
@@ -130,6 +130,17 @@ export default class Board extends BoardBase<IBoardProps, IBoardState> {
     this.setState({
       isEndGame: true
     })
+  }
+
+  public Undo(undoData: string, board: string) {
+    var arr = undoData.split(" ");
+    this._handleOtherMoveStr(arr[0]);
+    this._handleOtherMoveStr(arr[1]);
+
+    var timer = setInterval(() => {
+      this.board = board;
+      clearInterval(timer);
+    }, 0.5 * 1000);
   }
 
   private _createPieces(): JSX.Element[] {
@@ -186,13 +197,13 @@ export default class Board extends BoardBase<IBoardProps, IBoardState> {
         if (this._overlay) this._overlay.hide();
         if (moveString !== "") {
           this._isRedTurn = !this._isRedTurn;
-          this.props.onMove(moveString, this.unlock);
+          this.props.onMove(moveString, this._unlock);
         }
       });
     }
   };
 
-  private unlock = (moveStr: String) => {
+  private _unlock = (moveStr: String) => {
     this._handleOtherMoveStr(moveStr);
     this._isRedTurn = !this._isRedTurn;
   };

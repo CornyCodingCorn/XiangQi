@@ -4,7 +4,7 @@ import EventHandler from "../../utils/EventHandler";
 import { Log } from "../../utils/Log";
 import { AppAxios } from "../configurations/axiosConfig";
 import { LobbyDto } from "../dto/LobbyDto";
-import { LobbyMessage, LobbyMessageType } from "../dto/LobbyMessage";
+import { LobbyMessage, LobbyMessageType, LobbyMessageUndoType } from "../dto/LobbyMessage";
 import ResponseObject from "../dto/ResponseObject";
 import AuthenticationService from "./AuthenticationService";
 import {
@@ -27,6 +27,7 @@ export interface LobbyInfo {
 }
 
 export class LobbyService {
+  //#region members
   private static _lobbySubscription: StompSubscription;
 
   private static _lobbyID = "";
@@ -86,12 +87,15 @@ export class LobbyService {
       board: this.board
     };
   }
-
-  public static readonly onLobbyInfoChanged = new EventHandler<
-    LobbyMessageType
-  >();
+  //#endregion
+  //#region events
+  public static readonly onLobbyUndoReplyReceive = new EventHandler<LobbyMessage>();
+  public static readonly onLobbyUndoRequestReceive = new EventHandler<LobbyMessage>();
+  public static readonly onLobbyUndo = new EventHandler<LobbyMessage>();
+  public static readonly onLobbyInfoChanged = new EventHandler<LobbyMessageType>();
   public static readonly onLobbyMoveReceive = new EventHandler<LobbyMessage>();
   public static readonly onLobbyEndReceive = new EventHandler<LobbyMessage>();
+  //#endregion
 
   public static Ready(): void {
     let message: LobbyMessage = {
@@ -123,6 +127,31 @@ export class LobbyService {
       player: AuthenticationService.playerInfo!.username,
       type: LobbyMessageType.END,
       data: "",
+    }
+
+    WebSocketService.stompClient!.publish({
+      destination: urlJoin(LOBBIES_WS_LOBBY_MESSAGE, this.lobbyInfo.lobbyID),
+      body: JSON.stringify(message)
+    })
+  }
+
+  public static RequestUndo() {
+    let message: LobbyMessage = {
+      player: AuthenticationService.playerInfo!.username,
+      type: LobbyMessageType.UNDO_REQUEST,
+      data: "",
+    }
+
+    WebSocketService.stompClient!.publish({
+      destination: urlJoin(LOBBIES_WS_LOBBY_MESSAGE, this.lobbyInfo.lobbyID),
+      body: JSON.stringify(message)
+    })
+  }
+  public static ReplyUndo(accept: boolean) {
+    let message: LobbyMessage = {
+      player: AuthenticationService.playerInfo!.username,
+      type: LobbyMessageType.UNDO_REPLY,
+      data: accept ? LobbyMessageUndoType.ACCEPTED : LobbyMessageUndoType.REFUSED,
     }
 
     WebSocketService.stompClient!.publish({
@@ -180,6 +209,17 @@ export class LobbyService {
             break;
           case LobbyMessageType.END:
             this.onLobbyEndReceive.invoke(lobbyMessage);
+            break;
+          case LobbyMessageType.UNDO:
+            this.onLobbyUndo.invoke(lobbyMessage);
+            break;
+          case LobbyMessageType.UNDO_REQUEST:
+            if (lobbyMessage.player !==  AuthenticationService.playerInfo!.username) {
+              this.onLobbyUndoRequestReceive.invoke(lobbyMessage);
+            }
+            break;
+          case LobbyMessageType.UNDO_REPLY:
+            this.onLobbyUndoReplyReceive.invoke(lobbyMessage);
             break;
           default:
             updateLobbyInfo = false;

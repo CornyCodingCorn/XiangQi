@@ -1,7 +1,7 @@
 import * as React from "react";
 import { useNavigate } from "react-router-dom";
+import { Piece, PieceType } from "../../gameplay/common/Piece";
 import Board from "../../gameplay/components/Board";
-import Piece from "../../gameplay/components/Piece";
 import {
   gameplayBgBlack,
   gameplayBgRed,
@@ -12,6 +12,7 @@ import {
   LobbyMessage,
   LobbyMessageEndType,
   LobbyMessageType,
+  LobbyMessageUndoType,
 } from "../dto/LobbyMessage";
 import AuthenticationService from "../services/AuthenticationService";
 import { LobbyService } from "../services/LobbyService";
@@ -36,8 +37,8 @@ enum State {
 
 let unlockClb: ((oMoveStr: string) => void) | undefined;
 let boardRef: Board;
-
 let state: State = State.DRAW;
+
 function getStateClassName() {
   switch (state) {
     case State.DRAW:
@@ -48,7 +49,6 @@ function getStateClassName() {
       return "bg-success";
   }
 }
-
 function getStateString() {
   switch (state) {
     case State.DRAW:
@@ -59,8 +59,18 @@ function getStateString() {
       return "Victory";
   }
 }
+function addMove(list: string[], moveStr: string) {
+  if (moveStr === "") return list;
+  return [...list, `${moveStr} ${boardRef.board}`];
+}
 
 export interface IGamePlayProps {}
+export interface IUndoState {
+  show: boolean;
+  isRequest: boolean;
+  refused: boolean;
+  waiting: boolean;
+}
 
 export function GamePlay(props: IGamePlayProps) {
   const navigate = useNavigate();
@@ -68,19 +78,55 @@ export function GamePlay(props: IGamePlayProps) {
   const [isPlayerTurn, setIsPlayerTurn] = React.useState(false);
   const [isGameEnd, setIsGameEnd] = React.useState(false);
   const [useImage, setUseIcon] = React.useState(false);
+  const [undoState, setUndoState] = React.useState<IUndoState>({
+    show: false,
+    isRequest: false,
+    refused: false,
+    waiting: false,
+  });
   const [isPlayerRed /**setIsPlayerRed**/] = React.useState(
     LobbyService.isPlayerRed
   );
+  const [moveList, setMoveList] = React.useState<string[]>([]);
 
   const onMove = (moveStr: string, unlock: (oMoveStr: string) => void) => {
-    // moveStr == "" mean the player is black
     unlockClb = unlock;
+    // moveStr == "" mean the player is black
     if (moveStr === "") {
       return;
     }
 
+    // On move remove the buttons.
+    setMoveList((list) => addMove(list, moveStr));
+    setUndoState({
+      ...undoState,
+      show: false,
+    });
+
     setIsPlayerTurn(!isPlayerTurn);
     LobbyService.Move(moveStr);
+  };
+  const sendUndoRequest = () => {
+    // Request an undo
+    if (moveList.length < 2) return;
+
+    LobbyService.RequestUndo();
+    setUndoState({
+      show: true,
+      isRequest: false,
+      refused: false,
+      waiting: true,
+    });
+  };
+  // On button clicks
+  const replyToRequest: React.MouseEventHandler<HTMLButtonElement> = (c) => {
+    LobbyService.ReplyUndo(c.currentTarget.id === "undo-btn-accept");
+    setUndoState({
+      show: false,
+      isRequest: false,
+      refused: false,
+      waiting: false,
+    });
   };
 
   React.useEffect(() => {
@@ -89,8 +135,8 @@ export function GamePlay(props: IGamePlayProps) {
       if (unlockClb == null || !message.data) return;
 
       setIsPlayerTurn((i) => !i);
-
       unlockClb(message.data);
+      setMoveList((list) => addMove(list, message.data!));
     };
 
     let onWinOrDraw = (message: LobbyMessage) => {
@@ -123,15 +169,69 @@ export function GamePlay(props: IGamePlayProps) {
       }
     };
 
-    LobbyService.onLobbyEndReceive.addCallback(onWinOrDraw);
+    const undoReceiveReply = (message: LobbyMessage) => {
+      if (message.player === AuthenticationService.playerInfo!.username) {
+        setUndoState({
+          show: false,
+          isRequest: false,
+          refused: false,
+          waiting: false,
+        });
+
+        return;
+      }
+
+      const isAccepted = message.data === LobbyMessageUndoType.ACCEPTED;
+
+      // We won't do anything here this message is just to let the client know that the other player
+      // has accepted their request, the real undo request will be sent with UNDO type.
+      setUndoState({
+        show: true,
+        isRequest: false,
+        refused: !isAccepted,
+        waiting: false,
+      });
+    };
+    const receiveUndoRequest = () => {
+      setUndoState({
+        show: true,
+        isRequest: true,
+        refused: false,
+        waiting: false,
+      });
+    };
+    // Actually moving pieces.
+    const undoReceive = (message: LobbyMessage) => {
+      // The actual undo message that will contain all the undo data.
+      setMoveList((list) => {
+        var newList = list.slice(0, list.length - 2);
+
+        boardRef.Undo(
+          message.data!,
+          newList.length === 0
+            ? board
+            : newList[newList.length - 1].split(" ")[1]
+        );
+        return newList;
+      });
+    };
+
+    LobbyService.onLobbyUndoRequestReceive.addCallback(receiveUndoRequest);
+    LobbyService.onLobbyUndoReplyReceive.addCallback(undoReceiveReply);
     LobbyService.onLobbyMoveReceive.addCallback(onMoveClb);
+    LobbyService.onLobbyUndo.addCallback(undoReceive);
+    LobbyService.onLobbyEndReceive.addCallback(onWinOrDraw);
+
     return () => {
-      LobbyService.onLobbyEndReceive.removeCallback(onWinOrDraw);
+      LobbyService.onLobbyUndoRequestReceive.removeCallback(receiveUndoRequest);
+      LobbyService.onLobbyUndoReplyReceive.removeCallback(undoReceiveReply);
       LobbyService.onLobbyMoveReceive.removeCallback(onMoveClb);
+      LobbyService.onLobbyUndo.removeCallback(undoReceive);
+      LobbyService.onLobbyEndReceive.removeCallback(onWinOrDraw);
     };
   }, []);
 
-  let boardComponent = React.createElement(Board, {
+  const boardComponent = React.createElement(Board, {
     onMove: onMove,
     board: board,
     moveCircleRadius: 2,
@@ -165,20 +265,6 @@ export function GamePlay(props: IGamePlayProps) {
     },
   });
 
-  let infoTop: React.CSSProperties = {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-  };
-
-  let infoBottom: React.CSSProperties = {
-    position: "absolute",
-    bottom: 0,
-    left: 0,
-    right: 0,
-  };
-
   let player = AuthenticationService.playerInfo!.username;
   let lobbyInfo = LobbyService.lobbyInfo;
   let otherPlayer =
@@ -189,6 +275,120 @@ export function GamePlay(props: IGamePlayProps) {
     backgroundImage: `url(${isPlayerRed ? gameplayBgRed : gameplayBgBlack})`,
     backgroundSize: "cover",
   };
+  let infoTop: React.CSSProperties = {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+  };
+  let infoBottom: React.CSSProperties = {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+  };
+
+  const undoComponent = (
+    <div className={`container row undo-div w-100`}>
+      <div
+        className="card card-body d-flex flex-column my-3"
+        style={{ height: "100px" }}
+      >
+        {undoState.show ? (
+          <>
+            {undoState.isRequest ? (
+              <>
+                <span style={{ textAlign: "center" }}>
+                  Player is asking for an undo
+                </span>
+                <div className="d-flex flex-row justify-content-center">
+                  <button
+                    id="undo-btn-accept"
+                    className="btn btn-success undo-btn col"
+                    onClick={replyToRequest}
+                  >
+                    <i className="bi bi-check" /> Accept
+                  </button>
+                  <button
+                    id="undo-btn-refuse"
+                    className="btn btn-danger undo-btn col"
+                    onClick={replyToRequest}
+                  >
+                    <i className="bi bi-x" /> Refuse
+                  </button>
+                </div>
+              </>
+            ) : (
+              <div
+                style={{
+                  height: "100%",
+                  display: "grid",
+                  justifyItems: "center",
+                  alignItems: "center",
+                  textAlign: "center",
+                }}
+              >
+                {undoState.waiting
+                  ? `Waiting for response...`
+                  : `Your undo request is ${
+                      undoState.refused ? "refused" : "accepted"
+                    }`}
+              </div>
+            )}
+          </>
+        ) : undefined}
+      </div>
+    </div>
+  );
+  const controlBtnComponent = (
+    <div className="container row align-content-center justify-content-center w-100 ctl-btn-div">
+      <button
+        className="btn btn-primary ctl-btn col"
+        onClick={sendUndoRequest}
+        disabled={
+          !isPlayerTurn ||
+          (undoState.show && undoState.refused) ||
+          moveList.length < 2
+        }
+      >
+        <i className="bi bi-skip-backward-fill"></i>
+      </button>
+      <button
+        className="btn btn-primary ctl-btn col"
+        onClick={() => setUseIcon(!useImage)}
+      >
+        <img
+          src={useImage ? PawnIconImage : PawnTextImage}
+          alt="button-icon"
+        ></img>
+      </button>
+      <button
+        className="btn btn-primary ctl-btn col"
+        onClick={() => LobbyService.Concede()}
+      >
+        <i className="bi bi-flag-fill"></i>
+      </button>
+    </div>
+  );
+  const listItems = (
+    <>
+      {moveList.map((moveString, index) =>
+        moveString !== "" ? (
+          <li
+            key={index}
+            className="list-group-item"
+            style={{
+              color:
+                moveString[2].toLowerCase() !== moveString[2] ? "red" : "black",
+            }}
+          >
+            <span className="fw-bold">{moveString[2]}</span>
+            {` : ${moveString[0]}, ${moveString[1]} ➜ ${moveString[3]}, ${moveString[4]}`}
+          </li>
+        ) : undefined
+      )}
+    </>
+  );
 
   return (
     <div className="h-100" style={bgImage}>
@@ -199,6 +399,11 @@ export function GamePlay(props: IGamePlayProps) {
           </div>
           <div className="d-flex flex-column col-xl-4 h-100">
             <div className="card card-body rounded-3 my-5">
+              <div id="move-list-div">
+                <ul id="move-list" className="list-group">
+                  {listItems}
+                </ul>
+              </div>
               <div key={"other-player"} style={infoTop} className="mx-3 my-3">
                 <PlayerInfo
                   playerName={otherPlayer}
@@ -208,50 +413,10 @@ export function GamePlay(props: IGamePlayProps) {
                   profileSize={60}
                   isRed={!LobbyService.isPlayerRed}
                 />
-              </div>
-              <div id="move-list-div">
-                <ul id="move-list" className="list-group">
-                  <li className="list-group-item">Test</li>
-                  <li className="list-group-item">Test</li>
-                  <li className="list-group-item">Test</li>
-                  <li className="list-group-item">Test</li>
-                  <li className="list-group-item">Test</li>
-                  <li className="list-group-item">Test</li>
-                  <li className="list-group-item">Test</li>
-                  <li className="list-group-item">Test</li>
-                  <li className="list-group-item">Test</li>
-                  <li className="list-group-item">Test</li>
-                  <li className="list-group-item">Test</li>
-                  <li className="list-group-item">Test</li>
-                  <li className="list-group-item">Test</li>
-                  <li className="list-group-item">Test</li>
-                  <li className="list-group-item">Test</li>
-                  <li className="list-group-item">Test</li>
-                  <li className="list-group-item">Test</li>
-                  <li className="list-group-item">Test</li>
-                </ul>
+                {undoComponent}
               </div>
               <div key={"player"} style={infoBottom} className="mx-3 my-3">
-                <div className="container row align-content-center justify-content-center w-100 ctl-btn-div">
-                  <button className="btn btn-primary ctl-btn col">
-                    <i className="bi bi-skip-backward-fill"></i>
-                  </button>
-                  <button
-                    className="btn btn-primary ctl-btn col"
-                    onClick={() => setUseIcon(!useImage)}
-                  >
-                    <img
-                      src={useImage ? PawnIconImage : PawnTextImage}
-                      alt="button-icon"
-                    ></img>
-                  </button>
-                  <button
-                    className="btn btn-primary ctl-btn col"
-                    onClick={() => LobbyService.Concede()}
-                  >
-                    <i className="bi bi-flag-fill"></i>
-                  </button>
-                </div>
+                {controlBtnComponent}
                 <PlayerInfo
                   playerName={player}
                   imageURL={"test"}
