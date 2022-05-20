@@ -1,6 +1,5 @@
 import * as React from "react";
 import { useNavigate } from "react-router-dom";
-import { Piece, PieceType } from "../../gameplay/common/Piece";
 import Board from "../../gameplay/components/Board";
 import {
   gameplayBgBlack,
@@ -229,7 +228,7 @@ export function GamePlay(props: IGamePlayProps) {
       LobbyService.onLobbyUndo.removeCallback(undoReceive);
       LobbyService.onLobbyEndReceive.removeCallback(onWinOrDraw);
     };
-  }, []);
+  }, [board]);
 
   const boardComponent = React.createElement(Board, {
     onMove: onMove,
