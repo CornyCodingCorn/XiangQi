@@ -99,7 +99,7 @@ export default class Piece extends React.Component<IPieceProps, IPieceState> {
 				callback();
 				if (this._timer) clearInterval(this._timer);
 			}
-		}, step * 1000)
+		}, step * 1000);
 	}
 
 	public componentWillUnmount() {

@@ -1,5 +1,7 @@
 import * as React from 'react';
 
+const MAX_NAME_LENGTH = 18;
+
 export interface IPlayerInfoProps {
   playerName: string,
   imageURL: string,
@@ -14,7 +16,7 @@ export default function PlayerInfo (props: IPlayerInfoProps) {
     height: props.height,
     maxHeight: props.height,
     outline: `${props.isPlayerTurn ? 5 : 0}px solid rgba(13, 110, 253, 0.45)`,
-    boxShadow: "5px"
+    boxShadow: props.isPlayerTurn ? `0px 0px 15px rgba(13, 110, 253, 0.45)` : `0px 0px 10px lightgrey`,
   }
 
   let profileStyle: React.CSSProperties = {
@@ -45,7 +47,7 @@ export default function PlayerInfo (props: IPlayerInfoProps) {
       </div>
       <div key={"Info div"} className="my-1 d-flex flex-column justify-content-center">
         <div style={{margin: "-7px", fontSize: "13px", padding: "0px 8px", color: `${props.isRed ? "#ff0000" : "#000000"}`}} className="fw-bold">{props.isRed ? "Red player" : "Black player"}</div>
-        <div style={{color: `${props.isRed ? "#ff0000" : "#000000"}`}} className='fw-bold fs-5'>{props.playerName}</div>
+        <div style={{color: `${props.isRed ? "#ff0000" : "#000000"}`}} className='fw-bold fs-5'>{props.playerName.length > MAX_NAME_LENGTH ? `${props.playerName.substring(0, MAX_NAME_LENGTH)}...` : props.playerName}</div>
       </div>
     </div>
   );
