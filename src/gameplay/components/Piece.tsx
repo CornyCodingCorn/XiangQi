@@ -20,6 +20,7 @@ export interface IPieceProps {
 	onMouseUp?: (arg0: Piece) => void;
 
 	isRed?: boolean;
+	isPlayerRed: boolean;
 
 	type?: PieceType;
 
@@ -113,6 +114,7 @@ export default class Piece extends React.Component<IPieceProps, IPieceState> {
 			transform: `translate(-50%, -50%) ${this.props.isFlipped ? "scale(1, -1)" : "scale(1, 1)"}`,
 			position: "absolute",
 			zIndex: this.state.zIndex,
+			cursor: (this.props.isPlayerRed ? this.props.isRed : !this.props.isRed) ? "pointer" : "default"
 		};
 
 		return (

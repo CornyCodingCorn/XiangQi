@@ -11,6 +11,9 @@ export enum LobbyMessageType {
   UNDO = "UNDO",
   UNDO_REQUEST = "UNDO_REQUEST",
   UNDO_REPLY = "UNDO_REPLY",
+  
+  PLAY_AGAIN = "PLAY_AGAIN",
+  RESTART = "RESTART",
 }
 
 export enum LobbyMessageEndType {

@@ -73,20 +73,24 @@ export interface IUndoState {
 
 export function GamePlay(props: IGamePlayProps) {
   const navigate = useNavigate();
+  const [, setInfo] = React.useState(LobbyService.lobbyInfo);
   const [board /**setBoard**/] = React.useState(LobbyService.board);
   const [isPlayerTurn, setIsPlayerTurn] = React.useState(false);
   const [isGameEnd, setIsGameEnd] = React.useState(false);
   const [useImage, setUseIcon] = React.useState(false);
+  const [isOtherPlayAgain, setOtherPlayAgain] = React.useState(false);
   const [undoState, setUndoState] = React.useState<IUndoState>({
     show: false,
     isRequest: false,
     refused: false,
     waiting: false,
   });
-  const [isPlayerRed /**setIsPlayerRed**/] = React.useState(
+  const [isPlayerRed, setIsPlayerRed] = React.useState(
     LobbyService.isPlayerRed
   );
   const [moveList, setMoveList] = React.useState<string[]>([]);
+  const [isPlayAgain, setPlayAgain] = React.useState(false);
+  const [reload, setReload] = React.useState(0);
 
   const onMove = (moveStr: string, unlock: (oMoveStr: string) => void) => {
     unlockClb = unlock;
@@ -127,7 +131,16 @@ export function GamePlay(props: IGamePlayProps) {
       waiting: false,
     });
   };
+  const sendPlayAgainRequest = () => {
+    LobbyService.PlayAgain();
+    setPlayAgain((b) => !b);
+  };
 
+  React.useEffect(() => {
+    // This is to unload the board then reload it because it like managing legacy codes,
+    // Just gotta take it out a blow it.
+    if (reload % 2 !== 0) setReload((v) => v + 1);
+  }, [reload]);
   React.useEffect(() => {
     if (LobbyService.isPlayerRed) setIsPlayerTurn((i) => !i);
     let onMoveClb = (message: LobbyMessage) => {
@@ -138,7 +151,27 @@ export function GamePlay(props: IGamePlayProps) {
       setMoveList((list) => addMove(list, message.data!));
     };
 
-    let onWinOrDraw = (message: LobbyMessage) => {
+    const requestPlayAgain = () => {
+      setOtherPlayAgain((v) => !v);
+    };
+    const restart = () => {
+      setReload((v) => v + 1);
+      setIsPlayerRed((red) => {
+        setIsPlayerTurn(!red);
+        return !red;
+      });
+      setUndoState({
+        show: false,
+        isRequest: false,
+        refused: false,
+        waiting: false,
+      });
+      setOtherPlayAgain(false);
+      setIsGameEnd(false);
+      setPlayAgain(false);
+      setMoveList([]);
+    };
+    const onWinOrDraw = (message: LobbyMessage) => {
       if (!message.data) return;
 
       if (message.type === LobbyMessageType.END) {
@@ -167,7 +200,6 @@ export function GamePlay(props: IGamePlayProps) {
         setIsGameEnd(true);
       }
     };
-
     const undoReceiveReply = (message: LobbyMessage) => {
       if (message.player === AuthenticationService.playerInfo!.username) {
         setUndoState({
@@ -214,19 +246,32 @@ export function GamePlay(props: IGamePlayProps) {
         return newList;
       });
     };
+    const onLobbyInfoUpdate = () => {
+      setInfo(() => LobbyService.lobbyInfo);
+    }
 
     LobbyService.onLobbyUndoRequestReceive.addCallback(receiveUndoRequest);
     LobbyService.onLobbyUndoReplyReceive.addCallback(undoReceiveReply);
     LobbyService.onLobbyMoveReceive.addCallback(onMoveClb);
     LobbyService.onLobbyUndo.addCallback(undoReceive);
+
+    LobbyService.onLobbyInfoChanged.addCallback(onLobbyInfoUpdate);
+
     LobbyService.onLobbyEndReceive.addCallback(onWinOrDraw);
+    LobbyService.onRestart.addCallback(restart);
+    LobbyService.onRequestPlayAgain.addCallback(requestPlayAgain);
 
     return () => {
       LobbyService.onLobbyUndoRequestReceive.removeCallback(receiveUndoRequest);
       LobbyService.onLobbyUndoReplyReceive.removeCallback(undoReceiveReply);
       LobbyService.onLobbyMoveReceive.removeCallback(onMoveClb);
       LobbyService.onLobbyUndo.removeCallback(undoReceive);
+
+      LobbyService.onLobbyInfoChanged.removeCallback(onLobbyInfoUpdate);
+
       LobbyService.onLobbyEndReceive.removeCallback(onWinOrDraw);
+      LobbyService.onRestart.addCallback(restart);
+      LobbyService.onRequestPlayAgain.removeCallback(requestPlayAgain);
     };
   }, [board]);
 
@@ -260,7 +305,7 @@ export function GamePlay(props: IGamePlayProps) {
     isEndGame: false,
     useImage: useImage,
     ref: (c) => {
-      boardRef = c as Board;
+      if (c) boardRef = c as Board;
     },
   });
 
@@ -268,7 +313,6 @@ export function GamePlay(props: IGamePlayProps) {
   let lobbyInfo = LobbyService.lobbyInfo;
   let otherPlayer =
     lobbyInfo.player1 === player ? lobbyInfo.player2 : lobbyInfo.player1;
-  otherPlayer = otherPlayer ? otherPlayer : "#Disconnected";
 
   let bgImage: React.CSSProperties = {
     backgroundImage: `url(${isPlayerRed ? gameplayBgRed : gameplayBgBlack})`,
@@ -389,12 +433,18 @@ export function GamePlay(props: IGamePlayProps) {
     </>
   );
 
+  if (!LobbyService.isPlaying) {
+    return <></>
+  }
+
   return (
     <div className="h-100" style={bgImage}>
       <div className="container h-100">
         <div className="row h-100">
           <div className="col-xl-8 d-flex justify-content-center h-100 align-content-center">
-            <div className="board-div align-self-center">{boardComponent}</div>
+            <div className="board-div align-self-center">
+              {reload % 2 === 0 ? boardComponent : undefined}
+            </div>
           </div>
           <div className="d-flex flex-column col-xl-4 h-100">
             <div className="card card-body rounded-3 my-5">
@@ -409,6 +459,7 @@ export function GamePlay(props: IGamePlayProps) {
                   imageURL={"test"}
                   isPlayerTurn={!isPlayerTurn}
                   height={75}
+                  isPlayAgain={isOtherPlayAgain}
                   profileSize={60}
                   isRed={!LobbyService.isPlayerRed}
                 />
@@ -421,35 +472,39 @@ export function GamePlay(props: IGamePlayProps) {
                   imageURL={"test"}
                   isPlayerTurn={isPlayerTurn}
                   height={75}
+                  isPlayAgain={false}
                   profileSize={60}
                   isRed={LobbyService.isPlayerRed}
                 />
               </div>
             </div>
           </div>
-          {isGameEnd ? (
-            <div className="overlay">
-              <div className="end-game-card">
-                <div
-                  key={"top"}
-                  className={`end-game-top ${getStateClassName()}`}
-                >
-                  <h1 className="fw-bold text-center mt-3 text-white">
-                    {getStateString()}
-                  </h1>
-                </div>
-                <button className="btn btn-primary btn-play-again">
-                  Play again
-                </button>
-                <button
-                  className="btn btn-primary btn-to-lobbies"
-                  onClick={() => navigate("/lobbies", { replace: true })}
-                >
-                  To lobbies
-                </button>
+          <dialog className="overlay" open={isGameEnd}>
+            <div className="end-game-card">
+              <div
+                key={"top"}
+                className={`end-game-top ${getStateClassName()}`}
+              >
+                <h1 className="fw-bold text-center mt-3 text-white">
+                  {getStateString()}
+                </h1>
               </div>
+              <button
+                className={`btn${
+                  isPlayAgain ? " btn-danger" : " btn-primary"
+                } btn-to-lobbies`}
+                onClick={sendPlayAgainRequest}
+              >
+                {isPlayAgain ? "Cancel request" : "Play again"}
+              </button>
+              <button
+                className="btn btn-primary btn-play-again"
+                onClick={() => navigate("/lobbies", { replace: true })}
+              >
+                To lobbies
+              </button>
             </div>
-          ) : undefined}
+          </dialog>
         </div>
       </div>
     </div>

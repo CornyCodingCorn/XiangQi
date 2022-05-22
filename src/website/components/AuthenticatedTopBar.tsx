@@ -1,11 +1,27 @@
 import * as React from "react";
-import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import AuthenticationService from "../services/AuthenticationService";
-import "./AuthenticatedTopBar.css"
+import { LobbyService } from "../services/LobbyService";
+import "./AuthenticatedTopBar.css";
 
 export interface IAuthenticatedTopBarProps {}
 
 export default function AuthenticatedTopBar(props: IAuthenticatedTopBarProps) {
+  const navigate = useNavigate();
+  const checkGameAndNav = (url: string) => {
+    if (LobbyService.isPlaying) {
+      if (LobbyService.finished || window.confirm("Are you sure you want to quit the match?")) {
+        navigate(url);
+        return true;
+      }
+
+      return false;
+    }
+
+    navigate(url);
+    return true;
+  };
+
   return (
     <React.Fragment>
       <button
@@ -18,15 +34,33 @@ export default function AuthenticatedTopBar(props: IAuthenticatedTopBarProps) {
       </button>
 
       <div className="collapse navbar-collapse" id="navmenu">
-        <ul className="navbar-nav ms-auto gap-3 align-items-end">
+        <ul className="navbar-nav ms-auto gap-1 align-items-end">
           <li className="nav-item listItem">
-            <Link className="tabLink" to={"/user"}>User</Link>
+            <button
+              className="link-btn"
+              onClick={() => checkGameAndNav("/user")}
+            >
+              <div className="link-btn-content">User</div>
+            </button>
           </li>
           <li className="nav-item listItem">
-            <Link className="tabLink" to={"/lobbies"}>Lobbies</Link>
+            <button
+              className="link-btn"
+              onClick={() => checkGameAndNav("/lobbies")}
+            >
+              <div className="link-btn-content">Lobbies</div>
+            </button>
           </li>
           <li className="nav-item listItem">
-            <Link className="tabLink" to={"/"} onClick={() => AuthenticationService.Logout()}>Logout</Link>
+            <button
+              className="link-btn"
+              onClick={() => {
+                if (checkGameAndNav("/"))
+                  AuthenticationService.Logout();
+              }}
+            >
+              <div className="link-btn-content">Logout</div>
+            </button>
           </li>
         </ul>
       </div>

@@ -121,7 +121,7 @@ export default class Board extends BoardBase<IBoardProps, IBoardState> {
   }
 
   public Restart() {
-    this._board.setBoard(Board.BOARD_STR);
+    this.board = Board.BOARD_STR;
     this._isRedTurn = true;
   }
 
@@ -167,6 +167,7 @@ export default class Board extends BoardBase<IBoardProps, IBoardState> {
           type: type,
           isRed: isRed,
           useImage: this.props.useImage,
+          isPlayerRed: this.props.isPlayerRed,
           ref: c => {
             if (c !== null) {
               this._pieceCollection.push(c);

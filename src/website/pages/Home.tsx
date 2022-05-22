@@ -1,26 +1,52 @@
 import * as React from "react";
-import { Link, Outlet } from "react-router-dom";
+import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import AuthenticatedTopBar from "../components/AuthenticatedTopBar";
 import TopBar from "../components/TopBar";
 import AuthenticationService from "../services/AuthenticationService";
+import { LobbyService } from "../services/LobbyService";
+import "./Home.css";
 
 export interface IHomeProps {}
 
 export default function Home(props: IHomeProps) {
-  const [isAuthenticated, setIsAuthenticated] = React.useState(AuthenticationService.isAuthenticated);
+  const [isAuthenticated, setIsAuthenticated] = React.useState(
+    AuthenticationService.isAuthenticated
+  );
+  const nav = useNavigate();
+  const location = useLocation();
 
   let setAuthTrueClb = () => setIsAuthenticated(true);
   let setAuthFalseClb = () => setIsAuthenticated(false);
 
-  AuthenticationService.onRefreshFailed.addCallback(setAuthFalseClb)
+  AuthenticationService.onRefreshFailed.addCallback(setAuthFalseClb);
   AuthenticationService.onLogout.addCallback(setAuthFalseClb);
   AuthenticationService.onLogin.addCallback(setAuthTrueClb);
 
+  React.useEffect(() => {
+    if ((LobbyService.isPlaying || LobbyService.finished) && !/^(?:\/lobbies\/[A-Za-z0-9]+\/game-play)/.test(location.pathname)) {
+      LobbyService.Quit();
+    }
+  }, [location.pathname]);
+
+  const checkAndNav = (url: string) => {
+    if (LobbyService.isPlaying) {
+      if (LobbyService.finished || window.confirm("Are you sure you want to quit the match?")) {
+        nav(url);
+        return true;
+      }
+
+      return false;
+    }
+
+    nav(url);
+    return true;
+  }
+  
   return (
     <div className="d-flex flex-column w-100 h-100">
-      <div className="navbar navbar-expand-lg bg-dark text-white">
+      <div className="navbar navbar-expand-lg bg-dark text-white m-0 p-0">
         <div className="container">
-          <div className="navbar-brand d-flex">
+          <div className="navbar-brand d-flex my-2 brand-div" onClick={() => checkAndNav("/")}>
             <svg version="1.1" x="0px" y="0px" width={45} viewBox="0 0 220 220">
               <g stroke="#f8f9fa" fill="#f8f9fa">
                 <path d="M110,0C49.346,0,0,49.346,0,110s49.346,110,110,110s110-49.346,110-110S170.654,0,110,0z M110,210   c-55.14,0-100-44.86-100-100S54.86,10,110,10s100,44.86,100,100S165.14,210,110,210z" />
@@ -29,19 +55,12 @@ export default function Home(props: IHomeProps) {
                 <rect x="85.389" y="55.457" width="49.223" height="12" />
               </g>
             </svg>
-            <Link
-              className="fw-bolder text-white text-decoration-none align-self-center m-2 text-uppercase"
-              to="/"
-            >
+            <div className="fw-bolder text-white text-decoration-none align-self-center m-2 text-uppercase">
               XiangQi Online
-            </Link>
+            </div>
           </div>
 
-          {isAuthenticated ? (
-            <AuthenticatedTopBar />
-          ) : (
-            <TopBar />
-          )}
+          {isAuthenticated ? <AuthenticatedTopBar /> : <TopBar />}
         </div>
       </div>
       <div className="flex-grow-1 overflow-auto">

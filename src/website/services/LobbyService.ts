@@ -24,6 +24,8 @@ export interface LobbyInfo {
   player2Ready: boolean;
 
   board: string;
+
+  isPlaying: boolean;
 }
 
 export class LobbyService {
@@ -73,6 +75,16 @@ export class LobbyService {
   public static get board(): string {
     return LobbyService._board;
   }
+
+  private static _isPlaying: boolean = false;
+  public static get isPlaying(): boolean {
+    return LobbyService._isPlaying;
+  }
+
+  private static _finished: boolean = false;
+  public static get finished(): boolean {
+    return LobbyService._finished;
+  }
  
   public static get lobbyInfo(): LobbyInfo {
     return {
@@ -84,17 +96,20 @@ export class LobbyService {
       player1Ready: this.player1Ready,
       player2Ready: this.player2Ready,
 
-      board: this.board
+      board: this.board,
+      isPlaying: this.isPlaying,
     };
   }
   //#endregion
   //#region events
-  public static readonly onLobbyUndoReplyReceive = new EventHandler<LobbyMessage>();
   public static readonly onLobbyUndoRequestReceive = new EventHandler<LobbyMessage>();
+  public static readonly onLobbyUndoReplyReceive = new EventHandler<LobbyMessage>();
   public static readonly onLobbyUndo = new EventHandler<LobbyMessage>();
   public static readonly onLobbyInfoChanged = new EventHandler<LobbyMessageType>();
   public static readonly onLobbyMoveReceive = new EventHandler<LobbyMessage>();
   public static readonly onLobbyEndReceive = new EventHandler<LobbyMessage>();
+  public static readonly onRestart = new EventHandler<LobbyMessage>();
+  public static readonly onRequestPlayAgain = new EventHandler<LobbyMessage>();
   //#endregion
 
   public static Ready(): void {
@@ -120,6 +135,22 @@ export class LobbyService {
       destination: urlJoin(LOBBIES_WS_LOBBY_MESSAGE, this.lobbyInfo.lobbyID),
       body: JSON.stringify(message)
     })
+  }
+
+  public static Quit() {
+    let message: LobbyMessage = {
+      player: AuthenticationService.playerInfo!.username,
+      type: LobbyMessageType.DISCONNECT,
+      data: "",
+    }
+
+    WebSocketService.stompClient!.publish({
+      destination: urlJoin(LOBBIES_WS_LOBBY_MESSAGE, this.lobbyInfo.lobbyID),
+      body: JSON.stringify(message)
+    })
+
+    this.UnsubscribeToLobby();
+    this.cleanUpGame();
   }
 
   public static Concede() {
@@ -152,6 +183,23 @@ export class LobbyService {
       player: AuthenticationService.playerInfo!.username,
       type: LobbyMessageType.UNDO_REPLY,
       data: accept ? LobbyMessageUndoType.ACCEPTED : LobbyMessageUndoType.REFUSED,
+    }
+
+    WebSocketService.stompClient!.publish({
+      destination: urlJoin(LOBBIES_WS_LOBBY_MESSAGE, this.lobbyInfo.lobbyID),
+      body: JSON.stringify(message)
+    })
+  }
+
+  public static PlayAgain() {
+    if (typeof this.player1 === typeof undefined || typeof this.player2 === typeof undefined) {
+      return;
+    }
+
+    let message: LobbyMessage = {
+      player: AuthenticationService.playerInfo!.username,
+      type: LobbyMessageType.PLAY_AGAIN,
+      data: "",
     }
 
     WebSocketService.stompClient!.publish({
@@ -205,10 +253,12 @@ export class LobbyService {
             updateLobbyInfo = false;
             break;
           case LobbyMessageType.START:
-            // Don't need to do anything just start
+            this._isPlaying = true;
+            this._finished = false;
             break;
           case LobbyMessageType.END:
             this.onLobbyEndReceive.invoke(lobbyMessage);
+            this._finished = true;
             break;
           case LobbyMessageType.UNDO:
             this.onLobbyUndo.invoke(lobbyMessage);
@@ -220,6 +270,15 @@ export class LobbyService {
             break;
           case LobbyMessageType.UNDO_REPLY:
             this.onLobbyUndoReplyReceive.invoke(lobbyMessage);
+            break;
+          case LobbyMessageType.PLAY_AGAIN:
+            if (lobbyMessage.player !== AuthenticationService.playerInfo!.username) {
+              this.onRequestPlayAgain.invoke(lobbyMessage);
+            }
+            break;
+          case LobbyMessageType.RESTART:
+            this._isPlaying = true;
+            this.onRestart.invoke(lobbyMessage);
             break;
           default:
             updateLobbyInfo = false;
@@ -256,5 +315,21 @@ export class LobbyService {
     else {
       Log.log("WS_LOG", JSON.stringify(response, null, 2));
     }
+  }
+
+  private static cleanUpGame() {
+    this.SetInfo({
+      id: "",
+      player1: "",
+      player2: "",
+      player1Ready: false,
+      player2Ready: false,
+      blackPlayer: "",
+      redPlayer: "",
+      board: "",
+    });
+
+    this._isPlaying = false;
+    this._finished = false;
   }
 }
