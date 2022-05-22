@@ -6,9 +6,34 @@
   margin-right: 10px;
 }
 
-.listItem {
-}
-
 .tabLink:hover {
   color: #0d6efd
+}
+
+.link-btn {
+  transform: skewX(-15deg);
+  background-color: rgb(45, 45, 48);
+  color: white;
+  font-weight: bolder;
+  height: 70px;
+  width: 90px;
+  border: 0px;
+}
+
+@media (max-width: 992px) {
+  .link-btn {
+    transform: skewX(-15deg);
+    height: 40px;
+    margin-bottom: 3px;
+    width: calc(100vw - 25px);
+  }
+}
+
+.link-btn:hover {
+  background-color: rgb(212, 212, 212);
+  color: rgb(48, 48, 48);
+}
+
+.link-btn-content {
+  transform: skewX(15deg);
 }

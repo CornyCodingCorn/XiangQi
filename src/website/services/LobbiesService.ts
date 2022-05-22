@@ -83,8 +83,14 @@ export class LobbiesService {
       });
   }
 
-  public static CreateLobby(callback?: (err?: Error, lobby?: LobbyDto) => void) {
-    AppAxios.post(LOBBIES_URL)
+  public static CreateLobby(callback?: (err?: Error, lobby?: LobbyDto) => void, isPrivate?: boolean) {
+    const param = new URLSearchParams();
+    if (isPrivate) {
+      param.set("isPrivate", isPrivate.toString());
+    }
+      
+
+    AppAxios.post(`${LOBBIES_URL}?${param.toString()}`)
       .then((res) => {
         let resObj: ResponseObject<LobbyDto> = res.data;
         this._currentLobby = resObj.data;

@@ -7,7 +7,8 @@ export interface IPlayerInfoProps {
   imageURL: string,
   height: number,
   isPlayerTurn: boolean,
-  isRed: boolean
+  isRed: boolean,
+  isPlayAgain: boolean,
   profileSize: number
 }
 
@@ -35,6 +36,9 @@ export default function PlayerInfo (props: IPlayerInfoProps) {
     maxHeight: props.profileSize -10,
   }
 
+  let playerName = props.playerName ? props.playerName : "#Disconnected";
+  const postfix = props.isPlayAgain && props.playerName ? " (Play again)" : "";
+  playerName = playerName.length > MAX_NAME_LENGTH - postfix.length ? `${playerName.substring(0, MAX_NAME_LENGTH - postfix.length)}...` : playerName;
   return (
     <div className='d-flex flex-row border rounded-3' style={style}>
       <div key={"Profile div"} style={{width: props.height}} className="d-flex flex-column justify-content-center">
@@ -47,7 +51,7 @@ export default function PlayerInfo (props: IPlayerInfoProps) {
       </div>
       <div key={"Info div"} className="my-1 d-flex flex-column justify-content-center">
         <div style={{margin: "-7px", fontSize: "13px", padding: "0px 8px", color: `${props.isRed ? "#ff0000" : "#000000"}`}} className="fw-bold">{props.isRed ? "Red player" : "Black player"}</div>
-        <div style={{color: `${props.isRed ? "#ff0000" : "#000000"}`}} className='fw-bold fs-5'>{props.playerName.length > MAX_NAME_LENGTH ? `${props.playerName.substring(0, MAX_NAME_LENGTH)}...` : props.playerName}</div>
+        <div style={{color: `${props.isRed ? "#ff0000" : "#000000"}`}} className='fw-bold fs-5'>{playerName + postfix}</div>
       </div>
     </div>
   );

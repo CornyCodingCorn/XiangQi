@@ -11,6 +11,7 @@ import Lobbies from "./website/pages/Lobbies";
 import { WebSocketService } from "./website/services/WebsocketService";
 import { LobbiesService } from "./website/services/LobbiesService";
 import Lobby from "./website/pages/Lobby";
+import { GamePlay } from "./website/pages/GamePlay";
 
 export interface IAppProps {}
 
@@ -33,6 +34,7 @@ export default function App(props: IAppProps) {
           <Route path="/sign-up" element={<SignUp />} />
           <Route path="/lobbies" element={<Lobbies/> } />
           <Route path="/lobbies/:id" element={<Lobby /> } />
+          <Route path="/lobbies/:id/game-play" element={<GamePlay /> } />
         </Route>
       </Routes>
     </BrowserRouter>
