@@ -14,6 +14,8 @@ export enum LobbyMessageType {
   
   PLAY_AGAIN = "PLAY_AGAIN",
   RESTART = "RESTART",
+
+  CHANGE_SETTING = "CHANGE_SETTING",
 }
 
 export enum LobbyMessageEndType {

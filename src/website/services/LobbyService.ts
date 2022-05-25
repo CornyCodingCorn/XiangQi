@@ -5,6 +5,7 @@ import { Log } from "../../utils/Log";
 import { AppAxios } from "../configurations/axiosConfig";
 import { LobbyDto } from "../dto/LobbyDto";
 import { LobbyMessage, LobbyMessageType, LobbyMessageUndoType } from "../dto/LobbyMessage";
+import { LobbySetting } from "../dto/LobbySetting";
 import ResponseObject from "../dto/ResponseObject";
 import AuthenticationService from "./AuthenticationService";
 import {
@@ -26,6 +27,8 @@ export interface LobbyInfo {
   board: string;
 
   isPlaying: boolean;
+
+  setting: LobbySetting;
 }
 
 export class LobbyService {
@@ -85,6 +88,16 @@ export class LobbyService {
   public static get finished(): boolean {
     return LobbyService._finished;
   }
+
+  private static _setting: LobbySetting = {
+    minPerTurn: 5,
+    totalMin: 20,
+    isVsBot: false,
+    isPrivate: false
+  };
+  public static get setting(): LobbySetting {
+    return LobbyService._setting;
+  }
  
   public static get lobbyInfo(): LobbyInfo {
     return {
@@ -98,6 +111,8 @@ export class LobbyService {
 
       board: this.board,
       isPlaying: this.isPlaying,
+      
+      setting: this.setting,
     };
   }
   //#endregion
@@ -224,6 +239,19 @@ export class LobbyService {
       });
   }
 
+  public static ChangeSetting(setting: string) {
+    let message: LobbyMessage = {
+      player: AuthenticationService.playerInfo!.username,
+      type: LobbyMessageType.CHANGE_SETTING,
+      data: setting,
+    }
+
+    WebSocketService.stompClient!.publish({
+      destination: urlJoin(LOBBIES_WS_LOBBY_MESSAGE, this.lobbyInfo.lobbyID),
+      body: JSON.stringify(message)
+    })
+  }
+  
   //Subscribe to lobby with id
   public static SubscribeToLobby(lobby: LobbyDto) {
     // Make sure to update the lobby info;
@@ -242,6 +270,7 @@ export class LobbyService {
 
         switch (lobbyMessage.type) {
           case LobbyMessageType.CHANGE_READY:
+          case LobbyMessageType.CHANGE_SETTING: //New
           case LobbyMessageType.DISCONNECT:
           case LobbyMessageType.JOIN:
             if (!lobbyMessage.lobby) updateLobbyInfo = false;
@@ -306,6 +335,8 @@ export class LobbyService {
     this._isPlayer1Red = lobby.player1 === lobby.redPlayer;
 
     this._board = lobby.board;
+
+    this._setting = lobby.setting;
   }
 
   private static OnServerReply = (response: ResponseObject<any>) => {
@@ -327,6 +358,7 @@ export class LobbyService {
       blackPlayer: "",
       redPlayer: "",
       board: "",
+      setting: {} as LobbySetting,
     });
 
     this._isPlaying = false;

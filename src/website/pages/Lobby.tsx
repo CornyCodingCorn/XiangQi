@@ -1,5 +1,9 @@
+import { info } from "console";
 import * as React from "react";
 import { useNavigate } from "react-router-dom";
+import { json } from "stream/consumers";
+import { setSyntheticTrailingComments } from "typescript";
+import LobbySettingForm, { LobbySettingInfo } from "../components/LobbySettingForm";
 import { LobbyMessageType } from "../dto/LobbyMessage";
 import { LobbyService } from "../services/LobbyService";
 
@@ -8,6 +12,8 @@ export interface ILobbyProps {}
 export default function Lobby(props: ILobbyProps) {
   const [info, setInfo] = React.useState(LobbyService.lobbyInfo);
   const navigate = useNavigate();
+
+  let setting: LobbySettingInfo;
 
   React.useEffect(() => { 
     let clb = (type: LobbyMessageType) => {
@@ -40,10 +46,23 @@ export default function Lobby(props: ILobbyProps) {
     <div>
       <button className="btn btn-primary fw-bold" onClick={Ready}>Ready</button>
     </div>
-  </div>
+    <LobbySettingForm
+      isDisable={false}
+      onRender={(c) => (setting = c)}
+      onChange={() => ChangeSetting(setting)}
+    />
+    </div>
   ) : <div></div>;
 }
 
 function Ready() {
  LobbyService.Ready(); 
+}
+
+function ChangeSetting(setting: LobbySettingInfo) {
+  let newSet = "{\"minPerTurn\":\"" + setting.minPerTurn.value +
+                "\",\"totalMin\":\"" + setting.totalMin.value  +
+                "\",\"isVsBot\":\"" + setting.isVsBot.value +
+                "\",\"isPrivate\":\"" + setting.isPrivate.value + "\"}";
+  LobbyService.ChangeSetting(newSet);
 }
