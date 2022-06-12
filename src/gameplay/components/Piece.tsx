@@ -80,25 +80,41 @@ export default class Piece extends React.Component<IPieceProps, IPieceState> {
 		};
 	}
 
-	public MoveTo(x: number, y: number, duration: number, callback: () => void) {
+	public MoveTo(x: number, y: number, duration: number, callback: () => void, fromX?: number, fromY?: number) {
 		let t = 0;
 		let step = 0.01;
+
 		let oldX = this.state.x;
+		if (fromX) {
+			oldX = fromX;
+			this.setState({x: fromX});
+		}
+
 		let oldY = this.state.y;
+		if (fromY) {
+			oldY = fromY;
+			this.setState({y: fromY});
+		}
 
+		let stopTimer = false;
 		this._timer = setInterval(() => {
-			t += step;
-			let t0 = MathEx.easeInOutCubic(t / duration);
-			let deltaT0 = 1 - t0;
-
-			this.setState({
-				x: deltaT0 * oldX + t0 * x,
-				y: deltaT0 * oldY + t0 * y 
-			})
-
-			if (t >= duration) {
-				callback();
+			if (stopTimer) {
 				if (this._timer) clearInterval(this._timer);
+				callback();
+			} else {
+				t += step;
+				let t0 = MathEx.easeInOutCubic(t / duration);
+				t0 = t0 > 1 ? 1 : t0;
+				let deltaT0 = 1 - t0;
+	
+				this.setState({
+					x: deltaT0 * oldX + t0 * x,
+					y: deltaT0 * oldY + t0 * y 
+				})
+	
+				if (t >= duration) {
+					stopTimer = true;
+				}
 			}
 		}, step * 1000);
 	}

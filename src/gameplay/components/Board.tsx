@@ -60,6 +60,7 @@ export default class Board extends BoardBase<IBoardProps, IBoardState> {
   private _pieceCollection: Piece[] = [];
   private _bg: BgCanvas | null = null;
   private _overlay: Overlay | null = null;
+  private _onPieceAdded: ((p: Piece) => void)[] = [];
 
   constructor(props: IBoardProps) {
     super(props);
@@ -134,13 +135,52 @@ export default class Board extends BoardBase<IBoardProps, IBoardState> {
 
   public Undo(undoData: string, board: string) {
     var arr = undoData.split(" ");
-    this._handleOtherMoveStr(arr[0]);
-    this._handleOtherMoveStr(arr[1]);
 
-    var timer = setInterval(() => {
+    const undoValues1 = {
+      oldX: Number.parseInt(arr[0][0]),
+      oldY: Number.parseInt(arr[0][1]),
+  
+      newX: Number.parseInt(arr[0][3]),
+      newY: Number.parseInt(arr[0][4]),
+    }
+    const undoValues2 = {
+      oldX: Number.parseInt(arr[1][0]),
+      oldY: Number.parseInt(arr[1][1]),
+  
+      newX: Number.parseInt(arr[1][3]),
+      newY: Number.parseInt(arr[1][4]),
+    }
+    
+    let piece1: Piece | null = null;
+    let piece2: Piece | null = null;
+    const cb = (p: Piece) => {
+      if (p.state.x === undoValues1.newX && p.state.y === undoValues1.newY) {
+        piece1 = p
+      } else if (p.state.x === undoValues2.newX && p.state.y === undoValues2.newY) {
+        piece2 = p
+      }
+
+      if (piece1 && piece2) {
+        piece1.setState({zIndex: 2});
+        piece2.setState({zIndex: 1});
+
+        piece1!.MoveTo(undoValues1.newX, undoValues1.newY, 0.25, () => {
+          piece1!.setState({zIndex: 0});
+        }, undoValues1.oldX, undoValues1.oldY);
+        piece2!.MoveTo(undoValues2.newX, undoValues2.newY, 0.25, () => {
+          piece2!.setState({zIndex: 0});
+        }, undoValues2.oldX, undoValues2.oldY);
+  
+        this._onPieceAdded.splice(this._onPieceAdded.indexOf(cb), 1);
+      }
+    }
+
+    this._onPieceAdded.push(cb);
+    let midStepBoard = StringUtils.replaceCharAt(this.board, PieceType.Empty, BoardConst.BOARD_COL * undoValues1.oldY + undoValues1.oldX);
+    midStepBoard = StringUtils.replaceCharAt(midStepBoard, PieceType.Empty, BoardConst.BOARD_COL * undoValues2.oldY + undoValues2.oldX);
+    this.setState({board: midStepBoard}, () => {
       this.board = board;
-      clearInterval(timer);
-    }, 0.5 * 1000);
+    });
   }
 
   private _createPieces(): JSX.Element[] {
@@ -171,6 +211,7 @@ export default class Board extends BoardBase<IBoardProps, IBoardState> {
           ref: c => {
             if (c !== null) {
               this._pieceCollection.push(c);
+              this._onPieceAdded.forEach(v => v(c));
             }
           },
           onMouseDown: this._selectPiece,
@@ -224,6 +265,8 @@ export default class Board extends BoardBase<IBoardProps, IBoardState> {
         break;
       }
     }
+
+    return {oldX, oldY, newX, newY}
   }
 
   private _movePiece(piece: Piece, x: number, y: number, e: SelectionEvent) {
