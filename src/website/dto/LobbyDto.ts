@@ -1,3 +1,5 @@
+import { LobbySetting } from "./LobbySetting";
+
 export class LobbyDto {
   constructor(
     public readonly id: string,
@@ -12,5 +14,7 @@ export class LobbyDto {
     public readonly redPlayer: string,
 
     public readonly board: string,
+
+    public readonly setting: LobbySetting,
   ) {}
 }
