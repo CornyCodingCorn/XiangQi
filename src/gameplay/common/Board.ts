@@ -239,6 +239,26 @@ export class Board extends BoardInfo {
 		}
   }
 
+	public getPieceAt(x: number, y: number) {
+	  let pieceArr: Piece[] = [
+			...this.horses, 
+			...this.pawns, 
+			...this.rooks,
+			...this.elephants, 
+			...this.advisors, 
+			this.redKing, 
+			this.blackKing, 
+			...this.canons,]
+
+		for (let i = 0; i < pieceArr.length; i++) {
+			if (pieceArr[i].location.isEqual(Vector2.create(x, y))) {
+				return pieceArr[i];
+			}
+		}
+
+		return null;
+	}
+
 	public getInfoOfOneSide(isRed: boolean): BoardInfo {
 		let board = new BoardInfo();
 

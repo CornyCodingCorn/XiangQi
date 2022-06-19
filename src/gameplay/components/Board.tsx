@@ -46,7 +46,17 @@ export default class Board extends BoardBase<IBoardProps, IBoardState> {
   // This board is for constant change, the state board is only for removing/adding pieces
 
   private _isRedTurn = true;
+  public get isRedTurn() {
+    return this._isRedTurn;
+  }
+  public set isRedTurn(value) {
+    this._isRedTurn = value;
+  }
+
   private _board: BoardLogic = BoardLogic.getInstance();
+  public get boardLogic(): BoardLogic {
+    return this._board;
+  }
   public get board(): string {
     return this._board.getBoard();
   }
@@ -183,6 +193,15 @@ export default class Board extends BoardBase<IBoardProps, IBoardState> {
     });
   }
 
+  public getPieceAt(x: number, y: number) {
+    for (let i = 0; i < this._pieceCollection.length; i++) {
+      const v = this._pieceCollection[i];
+      if (v.props.x === x && v.props.y === y) return v;
+    }
+
+    return null;
+  }
+
   private _createPieces(): JSX.Element[] {
     let pieces: JSX.Element[] = [];
     this._pieceCollection = [];
@@ -235,12 +254,7 @@ export default class Board extends BoardBase<IBoardProps, IBoardState> {
       (piece.state.isRed ? this.state.isPlayerRed : !this.state.isPlayerRed)
     ) {
       this._overlay.show(piece, (x, y, e) => {
-        let moveString = this._movePiece(piece, x, y, e);
-        if (this._overlay) this._overlay.hide();
-        if (moveString !== "") {
-          this._isRedTurn = !this._isRedTurn;
-          this.props.onMove(moveString, this._unlock);
-        }
+        this.movePiece(piece, x, y, e);
       });
     }
   };
@@ -267,6 +281,15 @@ export default class Board extends BoardBase<IBoardProps, IBoardState> {
     }
 
     return {oldX, oldY, newX, newY}
+  }
+
+  public movePiece(piece: Piece, x: number, y: number, e: SelectionEvent) {
+    if (this._overlay) this._overlay.hide();
+    let moveString = this._movePiece(piece, x, y, e);
+    if (moveString !== "") {
+      this._isRedTurn = !this._isRedTurn;
+      this.props.onMove(moveString, this._unlock);
+    }
   }
 
   private _movePiece(piece: Piece, x: number, y: number, e: SelectionEvent) {

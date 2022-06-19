@@ -10,6 +10,8 @@ var navigation: NavigateFunction;
 
 export default function Lobbies(props: ILobbiesProps) {
   const [lobbies, setLobbies] = React.useState<LobbyDto[]>([]);
+  const [openDialog, setOpenDialog] = React.useState(false);
+  const [dialogError, setDialogError] = React.useState("");
   navigation = useNavigate();
 
   // Store it for cleaning up
@@ -27,10 +29,43 @@ export default function Lobbies(props: ILobbiesProps) {
     };
   }, []);
 
+  React.useEffect(() => {
+    setDialogError("");
+  }, [openDialog]);
+
   let rows = CreateLobbiesElements(lobbies);
 
   return (
     <div className="container h-100">
+      {openDialog ? <dialog style={{
+        display: "grid",
+        justifyContent: "center",
+        border: "0px",
+        width: "100%",
+        height: "calc(100% - 72px)",
+        zIndex: "2",
+        alignContent: "center",
+        background: "rgba(20, 20, 20, 0.4)"
+      }}>
+        <div style={{
+          width: "300px",
+          background: "white",
+          borderRadius: "10px",
+        }}>
+          <div style={{fontWeight: "bold", textAlign: "center", marginTop: "10px"}}>Join with id</div>
+          <div style={{marginTop: "15px"}}>
+            <label style={{fontWeight: "bold", marginLeft: "10px", marginRight: "10px"}}>ID </label>
+            <input type="text" style={{width: "250px"}} ref={c => { if (c) lobbyIdInput = c; }}></input>
+          </div>
+          <div style={{justifyContent: "center", display: "flex", flexDirection: "row", marginTop: "15px"}}>
+            <button className="btn btn-primary mx-3" onClick={() => JoinLobbyWithId(lobbyIdInput.value, (err) => {
+              setDialogError("Failed to join");
+            })}>Join</button>
+            <button className="btn btn-danger mx-3" onClick={() => {setOpenDialog(false)}}>Cancel</button>
+          </div>
+          <div style={{textAlign: "center", color: "red", marginBottom: "10px", marginTop: "10px"}}>{dialogError}</div>
+        </div>
+      </dialog> : undefined}
       <div className="row h-100">
         <div key={"lobbiesInfo"} className="col-lg-7 bg-primary h-100"></div>
         <div
@@ -70,7 +105,12 @@ export default function Lobbies(props: ILobbiesProps) {
           >
             Create new lobby
           </button>
-          <button key={"join-lobby"} className="btn btn-primary w-100 col-1 col-12 fw-bold align-self-end">
+          <button key={"join-lobby"} className="btn btn-primary w-100 col-1 mb-2 col-12 fw-bold align-self-end" onClick={() => CreateNewPrivateLobby()}>
+            Create private lobby
+          </button>
+          <button key={"join-lobby"} className="btn btn-primary w-100 col-1 col-12 fw-bold align-self-end" onClick={() => {
+            setOpenDialog(true);
+          }}>
             Join with id
           </button>
         </div>
@@ -89,9 +129,25 @@ function CreateNewLobby() {
   });
 }
 
-function JoinLobbyWithId(id: string) {
-  LobbyService.Join(id, () => {
+function CreateNewPrivateLobby() {
+  LobbiesService.CreateLobby((err, lobby) => {
+    if (err) return;
+
+    navigation(lobby!.id, {
+      replace: false,
+    });
+  }, true);
+}
+
+let lobbyIdInput: HTMLInputElement;
+function JoinLobbyWithId(id: string, errCbl?: (err: Error) => void) {
+  LobbyService.Join(id, (err) => {
     // TODO: add handler to show the error to user.
+    if (err) {
+      if (errCbl) errCbl(err);
+      return;
+    }
+
     navigation(id, {
       replace: false,
     });
@@ -103,6 +159,7 @@ function CreateLobbiesElements(lobbies: LobbyDto[]) {
 
   for (let i = 0; i < lobbies.length; i++) {
     let lobby = lobbies[i];
+    if (lobby.setting.privateLobby) continue;
 
     rows.push(
       <tr key={i}>

@@ -86,7 +86,7 @@ export class LobbiesService {
   public static CreateLobby(callback?: (err?: Error, lobby?: LobbyDto) => void, isPrivate?: boolean) {
     const param = new URLSearchParams();
     if (isPrivate) {
-      param.set("isPrivate", isPrivate.toString());
+      param.set("private", isPrivate.toString());
     }
       
 

@@ -3,7 +3,7 @@ export class LobbySetting {
     public readonly minPerTurn: number,
     public readonly totalMin: number,
   
-    public readonly isVsBot: boolean,
-    public readonly isPrivate: boolean,
+    public readonly vsBot: boolean,
+    public readonly privateLobby: boolean,
   ) {}
 }

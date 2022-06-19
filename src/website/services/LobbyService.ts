@@ -92,8 +92,8 @@ export class LobbyService {
   private static _setting: LobbySetting = {
     minPerTurn: 5,
     totalMin: 20,
-    isVsBot: false,
-    isPrivate: false
+    vsBot: false,
+    privateLobby: false
   };
   public static get setting(): LobbySetting {
     return LobbyService._setting;

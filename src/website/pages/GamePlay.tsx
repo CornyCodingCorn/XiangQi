@@ -1,6 +1,8 @@
 import * as React from "react";
 import { useNavigate } from "react-router-dom";
 import Board from "../../gameplay/components/Board";
+import * as BoardComponent from "../../gameplay/common/Board";
+import { PieceType } from "../../gameplay/common/Piece";
 import {
   gameplayBgBlack,
   gameplayBgRed,
@@ -16,6 +18,8 @@ import {
 import AuthenticationService from "../services/AuthenticationService";
 import { LobbyService } from "../services/LobbyService";
 import "./GamePlay.css";
+import { BoardConst } from "../../gameplay/components/BoardBase";
+import { SelectionEvent } from "../../gameplay/components/Overlay";
 
 const BOARD_COLOR = 0xefcc8b;
 const PAD_COLOR = 0x724726;
@@ -62,6 +66,44 @@ function addMove(list: string[], moveStr: string) {
   if (moveStr === "") return list;
   return [...list, `${moveStr} ${boardRef.board}`];
 }
+// Start counting the time until random move
+var playerClock: NodeJS.Timer;
+function clearPlayerClock() {
+  clearInterval(playerClock);
+}
+function startPlayerClock() {
+  const t = LobbyService.lobbyInfo.setting.minPerTurn;
+  const isRed =  LobbyService.isPlayerRed;
+
+  clearPlayerClock()
+  playerClock = setInterval(() => {
+    const boardStr = boardRef.board;
+    let type = PieceType.Empty;
+    for (let i = 0; i < boardStr.length; i++) {
+      if (boardStr[i] != PieceType.Empty) {
+        if (isRed ? boardStr[i].toUpperCase() !== boardStr[i] : boardStr[i].toLowerCase() !== boardStr[i]) continue;
+
+        type = boardStr[i].toLowerCase() as PieceType;
+        const x = i % BoardConst.BOARD_COL;
+        const y = Math.floor(i / BoardConst.BOARD_COL);
+        let moves = BoardComponent.Board.generateMove(type, x, y, isRed);
+        if (moves === "") continue;
+
+        const arr = moves.split("/");
+        const move = arr[Math.floor(Math.random() * (arr.length - 1))];
+        const moveX = Number.parseInt(move[0]);
+        const moveY = Number.parseInt(move[1]);
+        const piece = boardRef.getPieceAt(x, y);
+        if (!piece || piece.props.isRed !== isRed) continue;
+        
+        boardRef.movePiece(piece, moveX, moveY, SelectionEvent.Selected);
+        break;
+      }
+    }
+
+    clearPlayerClock()
+  }, t * 1000 * 60);
+}
 
 export interface IGamePlayProps {}
 export interface IUndoState {
@@ -92,6 +134,7 @@ export function GamePlay(props: IGamePlayProps) {
   const [isPlayAgain, setPlayAgain] = React.useState(false);
   const [reload, setReload] = React.useState(0);
 
+  if (moveList.length == 0 && isPlayerRed) startPlayerClock();
   const onMove = (moveStr: string, unlock: (oMoveStr: string) => void) => {
     unlockClb = unlock;
     // moveStr == "" mean the player is black
@@ -108,6 +151,9 @@ export function GamePlay(props: IGamePlayProps) {
 
     setIsPlayerTurn(!isPlayerTurn);
     LobbyService.Move(moveStr);
+
+    // Remove player clock;
+    clearPlayerClock();
   };
   const sendUndoRequest = () => {
     // Request an undo
@@ -149,6 +195,9 @@ export function GamePlay(props: IGamePlayProps) {
       setIsPlayerTurn((i) => !i);
       unlockClb(message.data);
       setMoveList((list) => addMove(list, message.data!));
+
+      // Start the clock count down;
+      startPlayerClock();
     };
 
     const requestPlayAgain = () => {
@@ -243,6 +292,10 @@ export function GamePlay(props: IGamePlayProps) {
             ? board
             : newList[newList.length - 1].split(" ")[1]
         );
+
+        if (isPlayerTurn) {
+          startPlayerClock();
+        }
         return newList;
       });
     };
