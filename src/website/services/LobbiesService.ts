@@ -99,6 +99,7 @@ export class LobbiesService {
           callback(undefined, resObj.data);
         }
         LobbyService.SubscribeToLobby(this._currentLobby);
+        LobbyService.invokePlayerChange();
       })
       .catch((err) => {
         if (callback) {

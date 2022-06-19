@@ -20,6 +20,8 @@ import { LobbyService } from "../services/LobbyService";
 import "./GamePlay.css";
 import { BoardConst } from "../../gameplay/components/BoardBase";
 import { SelectionEvent } from "../../gameplay/components/Overlay";
+import PlayerDto from "../dto/PlayerDto";
+import { GetPlayerProfile } from "../../resources/profiles";
 
 const BOARD_COLOR = 0xefcc8b;
 const PAD_COLOR = 0x724726;
@@ -133,6 +135,7 @@ export function GamePlay(props: IGamePlayProps) {
   const [moveList, setMoveList] = React.useState<string[]>([]);
   const [isPlayAgain, setPlayAgain] = React.useState(false);
   const [reload, setReload] = React.useState(0);
+  const [players, setPlayers] = React.useState<(PlayerDto | undefined)[]>([]);
 
   if (moveList.length == 0 && isPlayerRed) startPlayerClock();
   const onMove = (moveStr: string, unlock: (oMoveStr: string) => void) => {
@@ -247,6 +250,7 @@ export function GamePlay(props: IGamePlayProps) {
         }
 
         setIsGameEnd(true);
+        clearPlayerClock();
       }
     };
     const undoReceiveReply = (message: LobbyMessage) => {
@@ -302,6 +306,9 @@ export function GamePlay(props: IGamePlayProps) {
     const onLobbyInfoUpdate = () => {
       setInfo(() => LobbyService.lobbyInfo);
     }
+    const playerInfoChanged = (result: (PlayerDto | undefined)[]) => {
+      setPlayers(result);
+    }
 
     LobbyService.onLobbyUndoRequestReceive.addCallback(receiveUndoRequest);
     LobbyService.onLobbyUndoReplyReceive.addCallback(undoReceiveReply);
@@ -314,6 +321,8 @@ export function GamePlay(props: IGamePlayProps) {
     LobbyService.onRestart.addCallback(restart);
     LobbyService.onRequestPlayAgain.addCallback(requestPlayAgain);
 
+    LobbyService.onLobbyPlayerChanged.addCallback(playerInfoChanged);
+
     return () => {
       LobbyService.onLobbyUndoRequestReceive.removeCallback(receiveUndoRequest);
       LobbyService.onLobbyUndoReplyReceive.removeCallback(undoReceiveReply);
@@ -325,6 +334,8 @@ export function GamePlay(props: IGamePlayProps) {
       LobbyService.onLobbyEndReceive.removeCallback(onWinOrDraw);
       LobbyService.onRestart.addCallback(restart);
       LobbyService.onRequestPlayAgain.removeCallback(requestPlayAgain);
+
+      LobbyService.onLobbyPlayerChanged.removeCallback(playerInfoChanged);
     };
   }, [board]);
 
@@ -490,6 +501,9 @@ export function GamePlay(props: IGamePlayProps) {
     return <></>
   }
 
+
+  const playerDto = players[0] && players[0].username === player ? players[0] : players[1];
+  const oPlayerDto = players[0] === playerDto ? players[1] : players[0];
   return (
     <div className="h-100" style={bgImage}>
       <div className="container h-100">
@@ -509,7 +523,7 @@ export function GamePlay(props: IGamePlayProps) {
               <div key={"other-player"} style={infoTop} className="mx-3 my-3">
                 <PlayerInfo
                   playerName={otherPlayer}
-                  imageURL={"test"}
+                  imageURL={oPlayerDto ? GetPlayerProfile(oPlayerDto.profile) : ""}
                   isPlayerTurn={!isPlayerTurn}
                   height={75}
                   isPlayAgain={isOtherPlayAgain}
@@ -522,7 +536,7 @@ export function GamePlay(props: IGamePlayProps) {
                 {controlBtnComponent}
                 <PlayerInfo
                   playerName={player}
-                  imageURL={"test"}
+                  imageURL={playerDto ? GetPlayerProfile(playerDto.profile) : ""}
                   isPlayerTurn={isPlayerTurn}
                   height={75}
                   isPlayAgain={false}
@@ -541,6 +555,21 @@ export function GamePlay(props: IGamePlayProps) {
                 <h1 className="fw-bold text-center mt-3 text-white">
                   {getStateString()}
                 </h1>
+              </div>
+              <div className={`${getStateClassName()}`} style={{
+                border: `5px solid ${isPlayerRed ? "red" : "black"}`,
+                boxShadow: `0px 0px 20px ${isPlayerRed ? "red" : "black"}`,
+                borderRadius: "10px",
+                position: "absolute",
+                top: "calc(50% - 120px)",
+                left: "calc(50% - 100px)",
+                width: "200px",
+                height: "200px",
+                backgroundImage: `url(${GetPlayerProfile(AuthenticationService.playerInfo!.profile)})`,
+                backgroundSize: "cover",
+                backgroundRepeat: "no-repeat",
+              }}>
+
               </div>
               <button
                 className={`btn${

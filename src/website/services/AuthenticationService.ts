@@ -32,6 +32,9 @@ export default class AuthenticationService {
   public static get playerInfo() {
     return this._playerInfo;
   }
+  public static set playerInfo(value) {
+    this._playerInfo = value;
+  }
 
   public static readonly onRefresh: EventHandler<string> = new EventHandler();
   public static readonly onRefreshFailed: EventHandler<

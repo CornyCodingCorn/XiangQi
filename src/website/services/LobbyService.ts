@@ -6,6 +6,7 @@ import { AppAxios } from "../configurations/axiosConfig";
 import { LobbyDto } from "../dto/LobbyDto";
 import { LobbyMessage, LobbyMessageType, LobbyMessageUndoType } from "../dto/LobbyMessage";
 import { LobbySetting } from "../dto/LobbySetting";
+import PlayerDto from "../dto/PlayerDto";
 import ResponseObject from "../dto/ResponseObject";
 import AuthenticationService from "./AuthenticationService";
 import {
@@ -13,6 +14,7 @@ import {
   LOBBIES_WS_LOBBIES_BROKER,
   LOBBIES_WS_LOBBY_MESSAGE,
 } from "./LobbiesService";
+import { PlayerService } from "./PlayerService";
 import { WebSocketService } from "./WebsocketService";
 
 export interface LobbyInfo {
@@ -125,6 +127,7 @@ export class LobbyService {
   public static readonly onLobbyEndReceive = new EventHandler<LobbyMessage>();
   public static readonly onRestart = new EventHandler<LobbyMessage>();
   public static readonly onRequestPlayAgain = new EventHandler<LobbyMessage>();
+  public static readonly onLobbyPlayerChanged = new EventHandler<(PlayerDto | undefined)[]>();
   //#endregion
 
   public static Ready(): void {
@@ -233,6 +236,7 @@ export class LobbyService {
         this.SubscribeToLobby(resObj.data);
 
         if (callback) callback(undefined, resObj.data);
+        this.invokePlayerChange();
       })
       .catch((err) => {
         if (callback) callback(err, undefined);
@@ -313,7 +317,10 @@ export class LobbyService {
             updateLobbyInfo = false;
             break;
         }
-        if (updateLobbyInfo) this.onLobbyInfoChanged.invoke(lobbyMessage.type);
+        if (updateLobbyInfo) {
+          this.onLobbyInfoChanged.invoke(lobbyMessage.type);
+          this.invokePlayerChange();
+        }
       }
     );
   }
@@ -346,6 +353,17 @@ export class LobbyService {
     else {
       Log.log("WS_LOG", JSON.stringify(response, null, 2));
     }
+  }
+
+  public static invokePlayerChange() {
+    let player1Dto: PlayerDto | undefined, player2Dto;
+    PlayerService.GetPlayer(this._player1, (result) => {
+      player1Dto = result;
+      PlayerService.GetPlayer(this._player2, (result) => {
+        player2Dto = result;
+        this.onLobbyPlayerChanged.invoke([player1Dto, player2Dto]);
+      })
+    });
   }
 
   private static cleanUpGame() {

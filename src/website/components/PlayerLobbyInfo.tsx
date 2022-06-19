@@ -27,10 +27,8 @@ function PlayerLobbyInfo(props: IPlayerLobbyInfoProps) {
             height: "150px",
 						borderRadius: "10px",
             border: `5px solid ${color}`,
-            background: `${color} url(${props.img ? props.img : DefaultUser})`,
+            backgroundImage: `url(${props.img ? props.img : DefaultUser})`,
             backgroundSize: "cover",
-						backgroundRepeat: "no-repeat",
-						backgroundPosition: "center",
             boxShadow: `0px 0px ${props.isReady ? "20px" : "0px"} ${color}`}}></div>
         <span style={{
             paddingTop: "10px",
