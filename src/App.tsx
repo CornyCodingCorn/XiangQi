@@ -15,6 +15,7 @@ import { GamePlay } from "./website/pages/GamePlay";
 import User from "./website/pages/User";
 import VerifyEmail from "./website/pages/VerifyEmail";
 import ChangeEmail from "./website/pages/ChangeEmail";
+import Replay from "./website/pages/Replay";
 
 export interface IAppProps {}
 
@@ -39,6 +40,7 @@ export default function App(props: IAppProps) {
           <Route path="/sign-in" element={<SignIn />}/>
           <Route path="/sign-up" element={<SignUp />} />
           <Route path="/lobbies" element={<Lobbies/> } />
+          <Route path="/replay/:id" element={<Replay />}/>
           <Route path="/lobbies/:id" element={<Lobby /> } />
           <Route path="/lobbies/:id/game-play" element={<GamePlay /> } />
         </Route>

@@ -8,6 +8,8 @@ import { Match } from '../dto/Match';
 import moment from 'moment';
 import { gameplayBgBlack } from '../../resources/backgrounds/bgIndex';
 import { RequestService } from '../services/RequestService';
+import { setMoves } from './Replay';
+import { NavigateFunction, useNavigate } from 'react-router-dom';
 
 export interface IUserProps {
 
@@ -21,6 +23,7 @@ function User(props: IUserProps) {
 	const [matches, setMatches] = React.useState<Match[]>([]);
 	const [text, setText] = React.useState("");
 	const [isError, setIsError] = React.useState(false);
+	const navigate = useNavigate();
 
 	React.useEffect(() => {
 		PlayerService.GetPlayerMatches((result) => {
@@ -167,7 +170,7 @@ function User(props: IUserProps) {
 						</tr>
 					</thead>
 					<tbody>
-						{createTableRows(matches)}
+						{createTableRows(matches, navigate)}
 					</tbody>
 				</table>
 			</div>
@@ -177,7 +180,7 @@ function User(props: IUserProps) {
 
 export default User
 
-function createTableRows(matches: Match[]) {
+function createTableRows(matches: Match[], navigate: NavigateFunction) {
 	var result = matches.map((v, index) => {
 		var background = "";
 		var text = "";
@@ -201,7 +204,10 @@ function createTableRows(matches: Match[]) {
 				<div className={background} style={{color: "white", fontWeight: "bold", textAlign: "center", borderRadius: "10px", height: "38px", display: "grid", alignContent: "center"}}>{text}</div>
 			</td>
 			<td>
-				<button className='btn btn-primary fw-bold'>Replay</button>
+				<button className='btn btn-primary fw-bold' onClick={() => {
+					setMoves(v.moves);
+					navigate("/replay/" + v.id);
+				}}>Replay</button>
 			</td>
 		</tr>
 	});

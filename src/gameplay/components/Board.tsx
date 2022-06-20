@@ -137,10 +137,43 @@ export default class Board extends BoardBase<IBoardProps, IBoardState> {
   }
 
   public EndMove(moveStr: string) {
-    this._handleOtherMoveStr(moveStr);
+    this.handleOtherMoveStr(moveStr);
     this.setState({
       isEndGame: true
     })
+  }
+
+  public UndoOnePiece(moveStr: string, board: string) {
+    const undoValues = {
+      oldX: Number.parseInt(moveStr[3]),
+      oldY: Number.parseInt(moveStr[4]),
+  
+      newX: Number.parseInt(moveStr[0]),
+      newY: Number.parseInt(moveStr[1]),
+    }
+
+    let piece: Piece | null = null;
+    const cb = (p: Piece) => {
+      if (p.state.x === undoValues.newX && p.state.y === undoValues.newY) {
+        piece = p;
+      }
+
+      if (piece) {
+        piece.setState({zIndex: 1});
+
+        piece!.MoveTo(undoValues.newX, undoValues.newY, 0.25, () => {
+          piece!.setState({zIndex: 0});
+        }, undoValues.oldX, undoValues.oldY);
+  
+        this._onPieceAdded.splice(this._onPieceAdded.indexOf(cb), 1);
+      }
+    }
+
+    this._onPieceAdded.push(cb);
+    let midStepBoard = StringUtils.replaceCharAt(this.board, PieceType.Empty, BoardConst.BOARD_COL * undoValues.oldY + undoValues.oldX);
+    this.setState({board: midStepBoard}, () => {
+      this.board = board;
+    });
   }
 
   public Undo(undoData: string, board: string) {
@@ -260,11 +293,11 @@ export default class Board extends BoardBase<IBoardProps, IBoardState> {
   };
 
   private _unlock = (moveStr: String) => {
-    this._handleOtherMoveStr(moveStr);
+    this.handleOtherMoveStr(moveStr);
     this._isRedTurn = !this._isRedTurn;
   };
 
-  private _handleOtherMoveStr(oMoveStr: String) {
+  public handleOtherMoveStr(oMoveStr: String) {
     if (!oMoveStr) return;
 
     let oldX = Number.parseInt(oMoveStr[0]);
