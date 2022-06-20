@@ -1,8 +1,11 @@
 import * as React from "react";
 import { NavigateFunction, useNavigate } from "react-router-dom";
+import { GetPlayerProfile } from "../../resources/profiles";
 import { LobbyDto } from "../dto/LobbyDto";
+import PlayerDto from "../dto/PlayerDto";
 import { LobbiesService } from "../services/LobbiesService";
 import { LobbyService } from "../services/LobbyService";
+import { PlayerService } from "../services/PlayerService";
 import "./Lobbies.css";
 
 export interface ILobbiesProps {}
@@ -12,6 +15,7 @@ export default function Lobbies(props: ILobbiesProps) {
   const [lobbies, setLobbies] = React.useState<LobbyDto[]>([]);
   const [openDialog, setOpenDialog] = React.useState(false);
   const [dialogError, setDialogError] = React.useState("");
+  const [viewingPlayer, setViewingPlayer] = React.useState<PlayerDto | null>(null);
   navigation = useNavigate();
 
   // Store it for cleaning up
@@ -33,7 +37,9 @@ export default function Lobbies(props: ILobbiesProps) {
     setDialogError("");
   }, [openDialog]);
 
-  let rows = CreateLobbiesElements(lobbies);
+  let rows = CreateLobbiesElements(lobbies, (player) => {
+    setViewingPlayer(player);
+  });
 
   return (
     <div className="container h-100">
@@ -67,7 +73,33 @@ export default function Lobbies(props: ILobbiesProps) {
         </div>
       </dialog> : undefined}
       <div className="row h-100">
-        <div key={"lobbiesInfo"} className="col-lg-7 bg-primary h-100"></div>
+        <div key={"lobbiesInfo"} className="col-lg-7 h-100" style={{alignContent: "center", justifyContent: "center", display: "grid", flexDirection: "column"}}>
+          {viewingPlayer ? (<div>
+            <div style={{
+              width: "200px",
+              marginTop: "-70px",
+              height: "200px",
+              background: "white",
+              backgroundImage: `url(${GetPlayerProfile(viewingPlayer!.profile)})`,
+              backgroundSize: "cover",
+              backgroundRepeat: "no-repeat",
+              border: "5px solid rgb(38, 38, 38)",
+              borderRadius: "50%",
+              boxShadow: "0px 0px 20px rgba(38, 38, 38, 0.5)"
+            }}>
+            </div>
+            <div style={{textAlign: "center", marginTop: "20px", fontWeight: "bold", fontSize: "40px"}}>
+              {viewingPlayer!.username}
+            </div>
+            <div style={{textAlign: "center", fontWeight: "bold", fontSize: "20px"}}>
+              <span>Win/Lost: </span>
+              <span>{(viewingPlayer!.winLostRatio * 100).toString().substring(0, 4) + "%"}</span>
+            </div>
+          </div>) : <div style={{fontWeight: "bold", fontSize: "30px"}}>
+            Not viewing a player
+          </div>}
+        </div>
+
         <div
           key={"lobbiesList"}
           className="lobbiesListDiv col-lg-5 d-flex py-3 justify-content-center flex-column"
@@ -154,7 +186,7 @@ function JoinLobbyWithId(id: string, errCbl?: (err: Error) => void) {
   });
 }
 
-function CreateLobbiesElements(lobbies: LobbyDto[]) {
+function CreateLobbiesElements(lobbies: LobbyDto[], infoClick: (player: PlayerDto) => void) {
   let rows = [];
 
   for (let i = 0; i < lobbies.length; i++) {
@@ -174,7 +206,14 @@ function CreateLobbiesElements(lobbies: LobbyDto[]) {
           >
             Join
           </button>
-          <button className="btn btn-info  fw-bold">Info</button>
+          <button className="btn btn-info  fw-bold"
+          onClick={() => {
+            PlayerService.GetPlayer(lobby.player1, (result) => {
+              if (result) {
+                infoClick(result);
+              }
+            })
+          }}>Info</button>
         </td>
       </tr>
     );

@@ -10,6 +10,7 @@ export interface ISignUpProps {}
 
 export default function SignUp(props: ISignUpProps) {
   const location = useLocation();
+  const [error, setError] = React.useState("");
   const [successful, setSuccessful] = React.useState(false);
   const navigate = useNavigate();
 
@@ -37,13 +38,17 @@ export default function SignUp(props: ISignUpProps) {
           </form>
         ) : (
           <SignUpForm
+            text={error}
+            isError={error ? true : false}
             tittle={"Sign up"}
             buttonText="Sign up"
             linkText="Already have an account?"
             isSignIn={false}
             linkUrl={"/sign-in"}
             onRender={(c) => (info = c)}
-            onSubmit={() => register(info, navigate)}
+            onSubmit={() => register(info, navigate, (msg) => {
+              setError(msg);
+            })}
           />
         )}
       </div>
@@ -51,9 +56,15 @@ export default function SignUp(props: ISignUpProps) {
   );
 }
 
-function register(info: SignUpInfo, nav: NavigateFunction) {
+function register(info: SignUpInfo, nav: NavigateFunction, errClb: (message: string) => void) {
+  if (info.password !== info.passwordConfirm) {
+    errClb("Password and confirm password has to be the same!");
+    return;
+  }
+
   AuthenticationService.Register(info.username, info.email, info.password, (err) => {
     if (err) {
+      errClb(err.response!.data.message);
       return;
     }
 

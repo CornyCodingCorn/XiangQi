@@ -265,6 +265,8 @@ export default class Board extends BoardBase<IBoardProps, IBoardState> {
   };
 
   private _handleOtherMoveStr(oMoveStr: String) {
+    if (!oMoveStr) return;
+
     let oldX = Number.parseInt(oMoveStr[0]);
     let oldY = Number.parseInt(oMoveStr[1]);
 

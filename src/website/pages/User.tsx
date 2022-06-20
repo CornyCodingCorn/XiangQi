@@ -4,6 +4,10 @@ import { GetPlayerProfile } from '../../resources/profiles'
 import AuthenticationService from '../services/AuthenticationService'
 import PlayerDto from '../dto/PlayerDto';
 import { PlayerService } from '../services/PlayerService';
+import { Match } from '../dto/Match';
+import moment from 'moment';
+import { gameplayBgBlack } from '../../resources/backgrounds/bgIndex';
+import { RequestService } from '../services/RequestService';
 
 export interface IUserProps {
 
@@ -12,12 +16,32 @@ export interface IUserProps {
 var comboBox: HTMLSelectElement;
 
 function User(props: IUserProps) {
-	let playerInfo = AuthenticationService.playerInfo as PlayerDto;
+	const [playerInfo, setPlayerInfo] = React.useState(AuthenticationService.playerInfo as PlayerDto);
 	const [profile, setProfile] = React.useState(playerInfo.profile);
+	const [matches, setMatches] = React.useState<Match[]>([]);
+	const [text, setText] = React.useState("");
+	const [isError, setIsError] = React.useState(false);
 
-  return (
-    <div>
-      <div style={{
+	React.useEffect(() => {
+		PlayerService.GetPlayerMatches((result) => {
+			if (result) {
+				setMatches(result);
+			}
+		});
+
+		PlayerService.GetPlayer(playerInfo.username, result => {
+			if (result) {
+				AuthenticationService.playerInfo = result;
+				setPlayerInfo(result);
+			}
+		})
+	}, [])
+
+
+
+	return (
+		<div>
+			<div style={{
 				display: "flex",
 				marginTop: "40px",
 				marginBottom: "40px",
@@ -49,39 +73,40 @@ function User(props: IUserProps) {
 					flexDirection: "column",
 				}}>
 					<div style={{
-							fontWeight: "bold",
-							fontSize: "40px",
-							color: "rgb(38,38,38)",
-						}}>
+						fontWeight: "bold",
+						fontSize: "40px",
+						color: "rgb(38,38,38)",
+					}}>
 						<span>Username: </span>
 						<span>{playerInfo.username}</span>
 					</div>
 					<div style={{
-							fontWeight: "bold",
-							fontSize: "20px",
-							color: "rgb(38,38,38)",
-						}}>
-							<span style={{color: "green"}}>Win</span>
-							<span>/</span>
-							<span style={{color: "red"}}>Lost</span>
-							<span> ratio: </span>
-							<span style={{color: `${playerInfo.winLostRatio < 0.2 ? "red" : playerInfo.winLostRatio < 0.6 ? "yellow" : "green"}`}}>{`${playerInfo.winLostRatio ? playerInfo.winLostRatio * 100 : 69.99999999}`.substring(0, 4) + '%'}</span>
+						fontWeight: "bold",
+						fontSize: "20px",
+						color: "rgb(38,38,38)",
+					}}>
+						<span style={{ color: "green" }}>Win</span>
+						<span>/</span>
+						<span style={{ color: "red" }}>Lost</span>
+						<span> ratio: </span>
+						<span style={{ color: `${playerInfo.winLostRatio < 0.2 ? "red" : playerInfo.winLostRatio < 0.6 ? "yellow" : "green"}` }}>{`${playerInfo.winLostRatio ? playerInfo.winLostRatio * 100 : 69.99999999}`.substring(0, 4) + '%'}</span>
 					</div>
 					<div style={{
-							fontWeight: "bold",
-							fontSize: "20px",
-							color: "rgb(38,38,38)",
-						}}>
-							<span>Total matches: </span>
-							<span>{playerInfo.totalMatches ? playerInfo.totalMatches : 0}</span>
+						fontWeight: "bold",
+						fontSize: "20px",
+						color: "rgb(38,38,38)",
+					}}>
+						<span>Total matches: </span>
+						<span>{playerInfo.totalMatches ? playerInfo.totalMatches : 0}</span>
 					</div>
 					<select style={{
-							fontWeight: "bold",
-							fontSize: "20px",
-							color: "rgb(38,38,38)",
-						}} onChange={(e) => {
-							setProfile(e.target.selectedIndex);
-						}} ref={c => {comboBox = c as HTMLSelectElement;}}>
+						fontWeight: "bold",
+						fontSize: "20px",
+						color: "rgb(38,38,38)",
+					}} onChange={(e) => {
+						setProfile(e.target.selectedIndex);
+					}} ref={c => { comboBox = c as HTMLSelectElement; }}
+						defaultValue={playerInfo.profile}>
 						<option value={0}>Coconut</option>
 						<option value={1}>Galaxy</option>
 						<option value={2}>Hat</option>
@@ -90,23 +115,96 @@ function User(props: IUserProps) {
 						<option value={5}>Mind</option>
 						<option value={5}>Space ship</option>
 					</select>
+					<div style={{color: isError ? "red" : "green", marginTop: "5px", textAlign: "center"}} >{text}</div>
 					<div style={{
 						display: "flex",
 						flexDirection: "row"
 					}}>
-						<button className='btn btn-primary fw-bold mt-3' style={{width: "100px"}} onClick={() => {
-							PlayerService.ChangePlayerProfile(comboBox.selectedIndex, (result) => {
+						<button className='btn btn-primary fw-bold mt-3' style={{ width: "100px" }} onClick={() => {
+							setText("");
+							PlayerService.ChangePlayerProfile(comboBox.selectedIndex, (result, err) => {
 								if (result) AuthenticationService.playerInfo = result;
+								if (err) {
+									setText(err.message);
+									setIsError(true);
+								} else {
+									setText("Success");
+									setIsError(false);
+								}
 							})
 						}}>Save</button>
-						<button className='btn btn-primary fw-bold mt-3 ms-3' style={{width: "200px"}} onClick={() => {
-
+						<button className='btn btn-primary fw-bold mt-3 ms-3' style={{ width: "170px" }} onClick={() => {
+							setText("");
+							RequestService.RequestPasswordChange(playerInfo.username, (err) => {
+								if (err) {
+									setText(err.message);
+									setIsError(true);
+								} else {
+									setText("Change password email sent");
+									setIsError(false);
+								}
+							});
 						}}>Change password</button>
 					</div>
 				</div>
 			</div>
-    </div>
-  )
+
+			<div>
+				<table className='table' style={{
+					width: "90%",
+					boxShadow: "0px 0px 20px rgba(38, 38, 38, 0.5)",
+					marginLeft: "5%",
+					maxHeight: "calc(100% - 1000px)"
+				}}>
+					<thead>
+						<tr>
+							<th scope="col">#</th>
+							<th scope="col">Date</th>
+							<th scope="col">Black player</th>
+							<th scope="col">Red player</th>
+							<th scope="col">Result</th>
+							<th scope="col">Control</th>
+						</tr>
+					</thead>
+					<tbody>
+						{createTableRows(matches)}
+					</tbody>
+				</table>
+			</div>
+		</div>
+	)
 }
 
 export default User
+
+function createTableRows(matches: Match[]) {
+	var result = matches.map((v, index) => {
+		var background = "";
+		var text = "";
+		if (v.victor === "None") {
+			background = "bg-warn";
+			text = "Draw";
+		} else if (v.victor === AuthenticationService.playerInfo!.username) {
+			background = "bg-success";
+			text = "Victory";
+		} else {
+			background = "bg-danger"
+			text = "Lost";
+		}
+
+		return <tr>
+			<th scope="row">{index + 1}</th>
+			<td>{moment(v.time).format("MMMM Do YYYY")}</td>
+			<td style={{color: "black"}}>{v.blackPlayer}</td>
+			<td style={{color: "red"}}>{v.redPlayer}</td>
+			<td>
+				<div className={background} style={{color: "white", fontWeight: "bold", textAlign: "center", borderRadius: "10px", height: "38px", display: "grid", alignContent: "center"}}>{text}</div>
+			</td>
+			<td>
+				<button className='btn btn-primary fw-bold'>Replay</button>
+			</td>
+		</tr>
+	});
+
+	return result;
+}

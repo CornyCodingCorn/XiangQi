@@ -1,5 +1,6 @@
 import * as React from "react";
 import { Link } from "react-router-dom";
+import { RequestService } from "../services/RequestService";
 import "./SignUpForm.css";
 
 export interface ISignUpFormProps {
@@ -8,8 +9,12 @@ export interface ISignUpFormProps {
   linkText: String;
   buttonText: String;
   tittle: String;
+
+  text: String;
+  isError: Boolean;
   onRender: (info: SignUpInfo) => void;
   onSubmit: () => void;
+  onForgotPassword?: () => void;
 }
 
 interface ISignUpInfo {
@@ -135,14 +140,18 @@ export default function SignUpForm(props: ISignUpFormProps) {
             </div>
           </div>
         )}
+        <div style={{color: props.isError ? "red" : "black", textAlign: "center"}}>{props.text}</div>
         <div className="row mt-4 mt-md-5">
-          <div className="col-0 col-md-7 col-lg-8 text-center text-md-start text-primary fw-bold">
+          <div className="col-0 col-md-7 col-lg-8 text-center text-md-start text-primary fw-bold" style={{display: "flex"}}>
             <Link to={props.linkUrl.toString()}>{props.linkText}</Link>
+            <div onClick={props.onForgotPassword} style={{marginLeft: "30px", cursor: "pointer", textDecoration: "underline"}}>{props.isSignIn ? "Forgot password?" : ""}</div>
           </div>
           <div className="col-12 col-md-5 col-lg-4 mt-2 mt-md-0">
             <button
               type="button"
-              onClick={props.onSubmit}
+              onClick={() => {
+                props.onSubmit();
+              }}
               className="btn btn-primary w-100 fw-bold"
             >
               {props.buttonText}

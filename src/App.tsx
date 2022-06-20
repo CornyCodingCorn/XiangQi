@@ -13,6 +13,8 @@ import { LobbiesService } from "./website/services/LobbiesService";
 import Lobby from "./website/pages/Lobby";
 import { GamePlay } from "./website/pages/GamePlay";
 import User from "./website/pages/User";
+import VerifyEmail from "./website/pages/VerifyEmail";
+import ChangeEmail from "./website/pages/ChangeEmail";
 
 export interface IAppProps {}
 
@@ -31,6 +33,8 @@ export default function App(props: IAppProps) {
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<Home />}>
+          <Route path="/verify-email" element={<VerifyEmail />}/>
+          <Route path="/change-password" element={<ChangeEmail />}/>
           <Route path="/user" element={<User />}/>
           <Route path="/sign-in" element={<SignIn />}/>
           <Route path="/sign-up" element={<SignUp />} />
