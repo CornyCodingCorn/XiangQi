@@ -44,7 +44,9 @@ function User(props: IUserProps) {
 
 	return (
 		<div style={{
-			backgroundImage: `url(${bgChess3})`
+			backgroundImage: `url(${bgChess3})`,
+			backgroundSize: "cover",
+			minHeight: "100%"
 		}}>
 			<div style={{
 				display: "flex",
@@ -104,7 +106,7 @@ function User(props: IUserProps) {
 						<span>/</span>
 						<span style={{ color: "red" }}>Lost</span>
 						<span> ratio: </span>
-						<span style={{ color: `${playerInfo.winLostRatio < 0.2 ? "red" : playerInfo.winLostRatio < 0.6 ? "yellow" : "green"}` }}>{`${playerInfo.winLostRatio ? playerInfo.winLostRatio * 100 : 69.99999999}`.substring(0, 4) + '%'}</span>
+						<span style={{ color: `${playerInfo.winLostRatio < 0.2 ? "red" : playerInfo.winLostRatio < 0.6 ? "yellow" : "green"}` }}>{`${playerInfo.winLostRatio ? playerInfo.winLostRatio * 100 : "N/A"}`.substring(0, 4) + '%'}</span>
 					</div>
 					<div style={{
 						fontWeight: "bold",
