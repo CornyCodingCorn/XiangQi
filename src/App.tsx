@@ -16,6 +16,7 @@ import User from "./website/pages/User";
 import VerifyEmail from "./website/pages/VerifyEmail";
 import ChangeEmail from "./website/pages/ChangeEmail";
 import Replay from "./website/pages/Replay";
+import MainPage from "./website/pages/MainPage";
 
 export interface IAppProps {}
 
@@ -34,6 +35,7 @@ export default function App(props: IAppProps) {
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<Home />}>
+          <Route path="/" element={<MainPage/> }/>
           <Route path="/verify-email" element={<VerifyEmail />}/>
           <Route path="/change-password" element={<ChangeEmail />}/>
           <Route path="/user" element={<User />}/>

@@ -6,7 +6,7 @@ import PlayerDto from '../dto/PlayerDto';
 import { PlayerService } from '../services/PlayerService';
 import { Match } from '../dto/Match';
 import moment from 'moment';
-import { gameplayBgBlack } from '../../resources/backgrounds/bgIndex';
+import { bgChess3, gameplayBgBlack } from '../../resources/backgrounds/bgIndex';
 import { RequestService } from '../services/RequestService';
 import { setMoves } from './Replay';
 import { NavigateFunction, useNavigate } from 'react-router-dom';
@@ -43,11 +43,13 @@ function User(props: IUserProps) {
 
 
 	return (
-		<div>
+		<div style={{
+			backgroundImage: `url(${bgChess3})`
+		}}>
 			<div style={{
 				display: "flex",
-				marginTop: "40px",
-				marginBottom: "40px",
+				paddingTop: "40px",
+				paddingBottom: "40px",
 				marginLeft: "20px",
 				marginRight: "20px",
 				flexDirection: "row",
@@ -80,7 +82,17 @@ function User(props: IUserProps) {
 						fontSize: "40px",
 						color: "rgb(38,38,38)",
 					}}>
-						<span>Username: </span>
+						<span className='bg-primary' style={{
+							textAlign: "center",
+							color: "white",
+							borderRadius: "10px 50% 50% 10px",
+							paddingLeft: "10px",
+							marginRight: "10px",
+							paddingRight: "10px",
+							paddingTop: "5px",
+							userSelect: "none",
+							paddingBottom: "5px",
+						}}>Rank {playerInfo.rank} </span>
 						<span>{playerInfo.username}</span>
 					</div>
 					<div style={{
@@ -93,6 +105,13 @@ function User(props: IUserProps) {
 						<span style={{ color: "red" }}>Lost</span>
 						<span> ratio: </span>
 						<span style={{ color: `${playerInfo.winLostRatio < 0.2 ? "red" : playerInfo.winLostRatio < 0.6 ? "yellow" : "green"}` }}>{`${playerInfo.winLostRatio ? playerInfo.winLostRatio * 100 : 69.99999999}`.substring(0, 4) + '%'}</span>
+					</div>
+					<div style={{
+						fontWeight: "bold",
+						fontSize: "20px",
+						color: "rgb(38,38,38)",
+					}}>
+						<span>Ranking point: {playerInfo.rankingPoint}</span>
 					</div>
 					<div style={{
 						fontWeight: "bold",
@@ -157,6 +176,7 @@ function User(props: IUserProps) {
 					width: "90%",
 					boxShadow: "0px 0px 20px rgba(38, 38, 38, 0.5)",
 					marginLeft: "5%",
+					background: "white",
 					maxHeight: "calc(100% - 1000px)"
 				}}>
 					<thead>
@@ -174,6 +194,7 @@ function User(props: IUserProps) {
 					</tbody>
 				</table>
 			</div>
+			<div style={{height: "5px"}}></div>
 		</div>
 	)
 }

@@ -9,6 +9,7 @@ import AuthenticationService from "./AuthenticationService";
 const PLAYER_URL = urlJoin(SERVER_URL, "api/player");
 const PROFILE_URL = urlJoin(PLAYER_URL, "profile");
 const HISTORY_URL = urlJoin(PLAYER_URL, "history");
+const RANK_URL = urlJoin(PLAYER_URL, "rank");
 
 export class PlayerService {
     public static GetPlayer(username: String, clb: (result?: PlayerDto, err?: Error) => void): void {
@@ -43,6 +44,20 @@ export class PlayerService {
         const url = `${HISTORY_URL}?${param.toString()}`;
         AppAxios.get(url).then((res) => {
             let resObj = res.data as ResponseObject<Match[]>;
+            clb(resObj.data);
+        })
+        .catch((err) => {
+            clb(undefined, err);
+        });
+    }
+
+    public static GetTopPlayers(count: number, clb: (result?: string[], err?: Error) => void) {
+        let param = new URLSearchParams();
+        param.append("count", count.toString());
+
+        const url = `${RANK_URL}?${param.toString()}`;
+        AppAxios.get(url).then((res) => {
+            let resObj = res.data as ResponseObject<string[]>;
             clb(resObj.data);
         })
         .catch((err) => {

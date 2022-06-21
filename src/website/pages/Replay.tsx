@@ -96,8 +96,8 @@ function Replay(props: IReplayProps) {
           flexDirection: "column",
         }}>
           <div style={{ marginLeft: "20px", height: "100px", background: "white", borderRadius: "10px", flexGrow: "1", display: "flex", flexDirection: "column" }}>
-            <div style={{ fontWeight: "bold", fontSize: "20px", marginTop: "30px", marginBottom: "20px", textAlign: "center", userSelect: "none"}}>Control panel</div>
-            <div style={{flexGrow: "1", overflowX: "hidden", overflowY: "scroll"}}>
+            <div key={"title"} style={{ fontWeight: "bold", fontSize: "20px", marginTop: "30px", marginBottom: "20px", textAlign: "center", userSelect: "none"}}>Control panel</div>
+            <div key={"table"} style={{flexGrow: "1", overflowX: "hidden", overflowY: "scroll"}}>
               <table className='table' style={{ margin: "10px", width: "200px", boxShadow: "0px 0px 10px rgba(38, 38, 38, 0.4)", borderRadius: "10px" }}>
                 <thead>
                   <tr>
@@ -110,7 +110,7 @@ function Replay(props: IReplayProps) {
                 </tbody>
               </table>
             </div>
-            <div style={{ width: "200px", margin: "10px", display: "flex", flexDirection: "row", alignSelf: "center" }}>
+            <div key={"buttons"} style={{ width: "200px", margin: "10px", display: "flex", flexDirection: "row", alignSelf: "center" }}>
               <button className='btn btn-primary fw-bold' style={{ borderRadius: "10px 0px 0px 10px", height: "55px" }} disabled={moveIndex <= 0 || coolDown} onClick={() => {
                 startCoolDown();
                 setMoveIndex(v => --v);
@@ -154,13 +154,13 @@ function createMove(index: number) {
     let move = v.split(" ")[0];
     let text = `${move[2]}: ${move[0]}, ${move[1]} -> ${move[3]}, ${move[4]}`;
 
-		return <tr className={i === index ? "bg-primary" : ""} style={{color: i % 2 === 0 ? "red" : "black", userSelect: "none"}}>
+		return <tr key={i} className={i === index ? "bg-primary" : ""} style={{color: i % 2 === 0 ? "red" : "black", userSelect: "none"}}>
 			<th scope="row">{i + 1}</th>
 			<td style={{fontWeight: "bold"}}>{text}</td>
 		</tr>
 	});
 
-  result.push(<tr className={index >= moves.length ? "bg-primary" : ""} style={{userSelect: "none"}}>
+  result.push(<tr key={moves.length} className={index >= moves.length ? "bg-primary" : ""} style={{userSelect: "none"}}>
     <th>End</th>
     <td></td>
   </tr>)

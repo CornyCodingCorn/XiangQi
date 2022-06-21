@@ -6,6 +6,7 @@ export default class PlayerDto {
     public readonly winLostRatio: number,
     public readonly totalMatches: number,
     public readonly rank: number,
-    public readonly email: string
+    public readonly email: string,
+    public readonly rankingPoint: number,
   ) {}
 }

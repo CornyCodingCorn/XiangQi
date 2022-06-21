@@ -9,6 +9,7 @@ import Overlay, {
 } from "./Overlay";
 import Piece, { PieceType } from "./Piece";
 import { Board as BoardLogic } from "../common/Board";
+import { PlayRandomMoveClip } from "../../resources/audio/audioClip";
 
 export interface IBoardProps extends IBgCanvasProps, IOverlayProps {
   board: string;
@@ -166,6 +167,9 @@ export default class Board extends BoardBase<IBoardProps, IBoardState> {
         }, undoValues.oldX, undoValues.oldY);
   
         this._onPieceAdded.splice(this._onPieceAdded.indexOf(cb), 1);
+
+        // Play audio
+        PlayRandomMoveClip();
       }
     }
 
@@ -215,6 +219,8 @@ export default class Board extends BoardBase<IBoardProps, IBoardState> {
         }, undoValues2.oldX, undoValues2.oldY);
   
         this._onPieceAdded.splice(this._onPieceAdded.indexOf(cb), 1);
+        // Play audio
+        PlayRandomMoveClip();
       }
     }
 
@@ -288,6 +294,10 @@ export default class Board extends BoardBase<IBoardProps, IBoardState> {
     ) {
       this._overlay.show(piece, (x, y, e) => {
         this.movePiece(piece, x, y, e);
+        if (e === SelectionEvent.Selected) {
+          // Play move audio
+          PlayRandomMoveClip();
+        }
       });
     }
   };
@@ -311,6 +321,9 @@ export default class Board extends BoardBase<IBoardProps, IBoardState> {
       let pieceI = this._pieceCollection[i];
       if (pieceI.state.x === oldX && pieceI.state.y === oldY) {
         this._movePiece(pieceI, newX, newY, SelectionEvent.Selected);
+
+        // Play move audio
+        PlayRandomMoveClip();
         break;
       }
     }

@@ -148,7 +148,7 @@ export class Board extends BoardInfo {
 
 			let blocked = false;
 			for (let i = startIdx; i < endIdx; i++) {
-				let piece = Piece.getPieceType(board.getBoard(), ourKing.location.x, i);
+				let piece = Piece.getPieceType(boardStr, ourKing.location.x, i);
 				if (piece !== PieceType.Empty) {
 					blocked = true;
 					break;
